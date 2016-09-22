@@ -82,11 +82,11 @@ WSGI_APPLICATION = 'myADVISE.wsgi.application'
 DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'd44hau4ahenrou',                      # Or path to database file if using sqlite3.
+            'NAME': 'de6eq071f224gd',                      # Or path to database file if using sqlite3.
             # The following settings are not used with sqlite3:
-            'USER': 'vpbdqdgijspxrm',
-            'PASSWORD': 'L3l8Agiq-Bcae1VFL7VGrYbizX',
-            'HOST': 'ec2-54-225-195-254.compute-1.amazonaws.com',                      # Empty for localhost through domain sockets or           '127.0.0.1' for localhost through TCP.
+            'USER': 'fwpfgpdpsvrhmg',
+            'PASSWORD': '08BzUEfDheHEyGpgHQsHVWKytU',
+            'HOST': 'ec2-54-243-63-130.compute-1.amazonaws.com',                      # Empty for localhost through domain sockets or           '127.0.0.1' for localhost through TCP.
             'PORT': '5432',                      # Set to empty string for default.
         }
     }
