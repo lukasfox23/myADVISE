@@ -78,18 +78,30 @@ WSGI_APPLICATION = 'myADVISE.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
-
+#test database info
 DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'de6eq071f224gd',                      # Or path to database file if using sqlite3.
+            'NAME': 'dbsmfb1i9m1slt',                      # Or path to database file if using sqlite3.
             # The following settings are not used with sqlite3:
-            'USER': 'fwpfgpdpsvrhmg',
-            'PASSWORD': '08BzUEfDheHEyGpgHQsHVWKytU',
-            'HOST': 'ec2-54-243-63-130.compute-1.amazonaws.com',                      # Empty for localhost through domain sockets or           '127.0.0.1' for localhost through TCP.
+            'USER': 'dswnlxqthdsojc',
+            'PASSWORD': 'zquRJtX1PG3iAT29eubNmkEm-h',
+            'HOST': 'ec2-23-23-225-158.compute-1.amazonaws.com',                      # Empty for localhost through domain sockets or           '127.0.0.1' for localhost through TCP.
             'PORT': '5432',                      # Set to empty string for default.
         }
     }
+#prod database info
+# DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+#             'NAME': 'd44hau4ahenrou',                      # Or path to database file if using sqlite3.
+#             # The following settings are not used with sqlite3:
+#             'USER': 'vpbdqdgijspxrm',
+#             'PASSWORD': 'L3l8Agiq-Bcae1VFL7VGrYbizX',
+#             'HOST': 'ec2-54-225-195-254.compute-1.amazonaws.com',                      # Empty for localhost through domain sockets or           '127.0.0.1' for localhost through TCP.
+#             'PORT': '5432',                      # Set to empty string for default.
+#         }
+#     }
 
 
 AUTH_PASSWORD_VALIDATORS = [
