@@ -10,7 +10,7 @@ class Student(models.Model):
     graduationDate = models.DateField()
     class Meta:
         managed = False
-        db_table = 'basic_student'
+        db_table = 'student'
     def __str__(self):  # __unicode__ on Python 2
         return self.firstname + self.lastname
 
