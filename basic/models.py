@@ -34,6 +34,9 @@ class Progress(models.Model):
     completionflag = models.BooleanField(default=False)
     genedlist = models.CharField(max_length=200)
 
+class FlightPlan(models.Model):
+    flightplanID = models.AutoField(primary_key=True)
+    content = models.TextField()
 
 
 # STUDENT(StudentId, FirstName, LastName, School, GraduationDate)
