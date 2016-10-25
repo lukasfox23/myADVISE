@@ -2,7 +2,6 @@ from django.shortcuts import render
 from basic.models import Student
 # Create your views here.
 def index(request):
-
     return render(request, "basic/basic.html")
 
 def about(request):
