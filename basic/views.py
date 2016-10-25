@@ -7,3 +7,6 @@ def index(request):
 def about(request):
     user_list = Student.objects.all()[:50]
     return render(request, "basic/about.html", {'users': user_list})
+
+def contact(request):
+    return render(request, "basic/contact.html")
