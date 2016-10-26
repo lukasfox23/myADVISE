@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.contrib.auth import views
+from myADVISE.forms import LoginForm
 
 urlpatterns = [
     # Examples:
@@ -23,4 +25,6 @@ urlpatterns = [
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^', include("basic.urls")),
+    url(r'^login/$', views.login, {'template_name': 'basic/login.html', 'authentication_form': LoginForm}, name="login"),
+    url(r'^logout/$', views.logout, {'next_page': '/login'}),
 ]

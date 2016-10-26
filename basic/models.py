@@ -4,6 +4,8 @@ from django.db import models
 
 class Student(models.Model):
     studentid = models.AutoField(primary_key=True)
+    email = models.CharField(max_length=50, default='user@louisville.edu')
+    password = models.CharField(max_length=20, default = 'password')
     firstname = models.CharField(max_length=50)
     lastname = models.CharField(max_length=50)
     major = models.CharField(max_length=50)

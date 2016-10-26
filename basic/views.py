@@ -1,15 +1,19 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from basic.models import Student
 # Create your views here.
+@login_required(login_url='login/')
 def index(request):
-    if request.POST:
-         user_list = Student.objects.all()[:50]
-         return render(request, "basic/about.html", {'users': user_list})
     return render(request, "basic/basic.html")
 
+@login_required(login_url='../login/')
 def about(request):
     user_list = Student.objects.all()[:50]
     return render(request, "basic/about.html", {'users': user_list})
 
+@login_required(login_url='../login/')
 def contact(request):
     return render(request, "basic/contact.html")
+
+def login(request):
+    return render(request, "basic/login.html")
