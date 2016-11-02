@@ -12,9 +12,5 @@ def about(request):
     user_list = User.objects.all()[:50]
     return render(request, "basic/about.html", {'users': user_list})
 
-@login_required(login_url='../login/')
-def contact(request):
-    return render(request, "basic/contact.html")
-
 def login(request):
     return render(request, "basic/login.html")
