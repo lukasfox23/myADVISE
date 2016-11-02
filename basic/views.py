@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from basic.models import Student
 # Create your views here.
 @login_required(login_url='login/')
@@ -8,7 +9,7 @@ def index(request):
 
 @login_required(login_url='../login/')
 def about(request):
-    user_list = Student.objects.all()[:50]
+    user_list = User.objects.all()[:50]
     return render(request, "basic/about.html", {'users': user_list})
 
 @login_required(login_url='../login/')

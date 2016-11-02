@@ -2,6 +2,6 @@
 {% block content %}
 <h1 style="color:white">Guys we have dynamic database content!!</h1>
 {% for student in users %}
-<h5 style="color:white">{{student.firstname}} {{student.lastname}}</h1>
+<h5 style="color:white">{{student.username}} - {{student.id}}</h1>
 {% endfor %}
 {% endblock %}
