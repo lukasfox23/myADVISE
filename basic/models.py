@@ -1,44 +1,37 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
-class Student(models.Model):
-    studentid = models.AutoField(primary_key=True)
-    email = models.CharField(max_length=50, default='user@louisville.edu')
-    password = models.CharField(max_length=20, default = 'password')
-    firstname = models.CharField(max_length=50)
-    lastname = models.CharField(max_length=50)
-    major = models.CharField(max_length=50)
-    graduationdate = models.DateField()
-    class Meta:
-        db_table = 'student'
-    def __str__(self):  # __unicode__ on Python 2
-        return self.firstname + " " + self.lastname
+class StudentInfo(models.Model):
+    userid = models.ForeignKey(User)
+    major = models.CharField(max_length=10)
+    graddate = models.DateField()
+    progress = models.TextField()
+
 class Instructor(models.Model):
     instructorid = models.AutoField(primary_key=True)
-    firstname = models.CharField(max_length=50)
-    lastname = models.CharField(max_length=50)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
     rating = models.FloatField()
+    email = models.EmailField()
 
 class Course(models.Model):
     courseid = models.AutoField(primary_key=True)
+    subject = models.CharField(max_length=10)
     coursecode = models.CharField(max_length=10)
-    coursename = models.CharField(max_length=50)
-    school = models.CharField(max_length=50)
+    title = models.CharField(max_length=50)
     instructorid = models.ForeignKey(Instructor)
     genedflag = models.BooleanField(default=False)
-    coursetime = models.CharField(max_length=200)
-
-class Progress(models.Model):
-    progressid = models.AutoField(primary_key=True)
-    studentid = models.ForeignKey(Student)
-    courseid = models.ForeignKey(Course)
-    completionflag = models.BooleanField(default=False)
-    genedlist = models.CharField(max_length=200)
+    days = models.CharField(max_length=100)
+    coursetime = models.CharField(max_length=100)
+    units = models.IntegerField()
 
 class FlightPlan(models.Model):
     flightplanID = models.AutoField(primary_key=True)
     content = models.TextField()
+    major = models.CharField(max_length=10)
+    graddate = models.DateField()
 
 
 # STUDENT(StudentId, FirstName, LastName, School, GraduationDate)

@@ -1,6 +1,10 @@
+import json
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+#import necessary models
 from django.contrib.auth.models import User
+from basic.models import FlightPlan
+from basic.models import StudentInfo
 from myADVISE.forms import UserForm
 #login view request is named login...renamed default django function for clairty
 from django.contrib.auth import login as auth_login
@@ -11,8 +15,12 @@ def index(request):
 
 @login_required(login_url='../login/')
 def about(request):
-    user_list = User.objects.all()[:50]
-    return render(request, "basic/about.html", {'users': user_list})
+    current_user = request.user
+    major = StudentInfo.objects.get(userid=current_user.id)
+    user_list = FlightPlan.objects.filter(major__contains=major.major)[:1]
+    temp = user_list[0].content
+    flightplan = json.loads(temp)
+    return render(request, "basic/about.html", {'FlightPlan': flightplan, 'currentUser':current_user})
 
 def login(request):
     return render(request, "basic/login.html")

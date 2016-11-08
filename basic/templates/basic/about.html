@@ -1,7 +1,27 @@
 {% extends "basic/header.html" %}
 {% block content %}
-<h1 style="color:white">Guys we have dynamic database content!!</h1>
-{% for student in users %}
-<h5 style="color:white">{{student.username}} - {{student.id}}</h1>
+<h1 style="color:white">Hello {{currentUser.username}}!</h1>
+{% for semester in FlightPlan.semesters %}
+  <h5 style="color:white">{{semester.id}}</h1>
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Course Title</th>
+          <th>Units</th>
+          <th>Subject</th>
+        </tr>
+      </thead>
+      <tbody>
+    {% for classes in semester.classes %}
+        <tr>
+          <th scope="row">{{forloop.counter}}</th>
+          <td>{{classes.course}}</td>
+          <td>{{classes.cr}}</td>
+          <td>{{classes.subject}}</td>
+        </tr>
+    {% endfor%}
+  </tbody>
+</table>
 {% endfor %}
 {% endblock %}
