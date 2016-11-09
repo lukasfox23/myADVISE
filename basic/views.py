@@ -8,6 +8,7 @@ from basic.models import StudentInfo
 from myADVISE.forms import UserForm
 #login view request is named login...renamed default django function for clairty
 from django.contrib.auth import login as auth_login
+from django.contrib.auth import authenticate
 # Create your views here.
 @login_required(login_url='login/')
 def index(request):
@@ -30,6 +31,7 @@ def create(request):
         form = UserForm(request.POST)
         if form.is_valid():
             new_user = User.objects.create_user(**form.cleaned_data)
+            user = authenticate(username=new_user.username, password=new_user.password)
             auth_login(request, new_user)
             # redirect, or however you want to get to the main view
             return render(request, "basic/basic.html")
