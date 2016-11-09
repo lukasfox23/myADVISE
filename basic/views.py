@@ -31,8 +31,9 @@ def create(request):
         form = UserForm(request.POST)
         if form.is_valid():
             new_user = User.objects.create_user(**form.cleaned_data)
-            user = authenticate(username=new_user.username, password=new_user.password)
-            auth_login(request, new_user)
+            new_user = authenticate(username=new_user.username, password=new_user.password)
+            if new_user:
+                auth_login(request, new_user)
             # redirect, or however you want to get to the main view
             return render(request, "basic/basic.html")
     else:
