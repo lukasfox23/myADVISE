@@ -15,13 +15,13 @@ def index(request):
     return render(request, "basic/basic.html")
 
 @login_required(login_url='../login/')
-def about(request):
+def progress(request):
     current_user = request.user
     major = StudentInfo.objects.get(userid=current_user.id)
     user_list = FlightPlan.objects.filter(major__contains=major.major)[:1]
     temp = user_list[0].content
     flightplan = json.loads(temp)
-    return render(request, "basic/about.html", {'FlightPlan': flightplan, 'currentUser':current_user})
+    return render(request, "basic/progress.html", {'FlightPlan': flightplan, 'currentUser':current_user})
 
 def login(request):
     return render(request, "basic/login.html")
