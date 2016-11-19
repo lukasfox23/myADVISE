@@ -1,47 +1,89 @@
 {% extends "basic/header.html" %}
 
 {% block content %}
-<section id="mainpage" class="container">
-    <div class= "jumbotron">
-        <h1 class= "text-center">myADVISE</h1>
-        <p class= "text-center">Optimize your schedule making process!</p>
-    </div>
-    <div class="row">
-        <div class="col-lg-4">
-            <h2 style="color:#FFFFFF">Generate a schedule</h2>
-            <p style="color:#FFFFFF">Use this section to generate your schedule.</p>
-            <p>
-                <a class="btn btn-primary" href="#" role="button">Continue</a>
-            </p>
+<!-- Place a container within a jumbotron to make jumbotron full width-->
+<div class= "jumbotron" style="background-color:#aa1111">
+    <div class="container">
+        <div class="text-center" style="color:#ffffff">
+            <h1>myADVISE</h1>
+            <p>Optimize your schedule making process!</p>
         </div>
-        <div class="col-lg-4">
-            <h2 style="color:#FFFFFF">View profile</h2>
-            <p style="color:#FFFFFF">Here, you can view and edit your profile.</p>
-                <a class="btn btn-primary" href="#" role="button">Continue</a>
-            </p>
-        </div>
-        <div class="col-lg-4">
-            <h2 style="color:#FFFFFF">View academic progress</h2>
-            <p style="color:#FFFFFF">Use this section to view your academic progress.</p>
-                <a class="btn btn-primary" href="/progress" role="button">Continue</a>
-            </p>
+        <div class="row" style="padding-top:100px">
+            <a href="#">
+                <div class="col-lg-4 text-center" style="color:#ffffff">
+                    <span class="glyphicon glyphicon-calendar" style="font-size:150px"></span>
+                    <h3>Generate a schedule</h3>
+                    <p>Use this section to generate your schedule.</p>
+                </div>
+            </a>
+
+            <a href="#">
+                <div class="col-lg-4 text-center" style="color:#ffffff">
+                    <span class="glyphicon glyphicon-user" style="font-size:150px"></span>
+                    <h2 style="color:#FFFFFF">View profile</h2>
+                    <p style="color:#FFFFFF">Here, you can view and edit your profile.</p>
+                </div>
+            </a>
+
+            <a href="/progress">
+                <div class="col-lg-4 text-center" style="color:#ffffff">
+                    <span class="glyphicon glyphicon-send" style="font-size:150px"></span>
+                    <h2 style="color:#FFFFFF">View academic progress</h2>
+                    <p style="color:#FFFFFF">Use this section to view your academic progress.</p>
+                </div>
+            </a>
         </div>
     </div>
-    <div style="padding-top:100px" class="row text-center">
-        <a class="btn btn-default" href="#contact">Contact!</a>
-    </div>
-</section>
-<section id="contact" class="container">
-    <div class="jumbotron">
-        <h1>Reach out!</h1>
-        <p style="color:#FFFFFF">Whether you have questions, concerns, or just comments about the site, we'd love to hear from you!</p>
-        <form>
-            <div class="form-group">
-                <label for="comments" style="color:#FFFFFF">Comments:</label>
-                <textarea class="form-control" id="comments" rows="10"></textarea>
+</div>
+
+
+<!-- About myADVISE -->
+<!--<div id="about" class="jumbotron" style="background-color:#ebebeb">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-8">
+                <h2>What is myADVISE?</h2><br>
+                <h4>myADVISE is a web application built specifically for the University of Louisville Speed
+                    School of Engineering. With this app, we've eliminated the headaches students constantly
+                    experience when trying to schedule classes on their own. With proper use, a student can
+                    take full control of their education future!
+                </h4>
             </div>
-            <button type="submit" class="btn btn-primary">Submit!</button>
-        </form>
+            <div class="col-sm-4">
+                <span class="glyphicon glyphicon-calendar pull-right" style="font-size:150px"></span>
+            </div>
+        </div>
     </div>
-</section>
+</div>-->
+
+<!-- Support -->
+<!--<div id="contact" class="jumbotron">
+    <div class="container">
+        <div class="text-center" style="color:#aa1111">
+            <h2 class="text-center">Contact Us!</h2>
+        </div>
+        <div class="row">
+            <div class="col-sm-5">
+                <p>Contact us and we'll get back to you within 24 hours.</p>
+                <p>
+                    <span class="glyphicon glyphicon-map-marker"></span> Louisville, US
+                </p>
+                <p>
+                    <span class="glyphicon glyphicon-phone"></span> (502) 123-4567
+                </p>
+                <p>
+                    <span class="glyphicon glyphicon-envelope"></span> contact@myAdvise.com
+                </p>
+            </div>
+            <div class="col-sm-7">
+                <textarea class="form-control" id="comments" name="comments" placeholder="Comment" rows="5"></textarea><br>
+                <div class="row">
+                    <div class="col-sm-12 form-group">
+                        <button class="btn btn-default pull-right">Send</button>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>-->
+
 {% endblock %}
