@@ -8,6 +8,8 @@ class StudentInfo(models.Model):
     major = models.CharField(max_length=10)
     graddate = models.DateField()
     progress = models.TextField()
+    schedule = models.TextField()
+
 
 class Instructor(models.Model):
     instructorid = models.AutoField(primary_key=True)
@@ -22,6 +24,7 @@ class Course(models.Model):
     coursecode = models.CharField(max_length=10)
     title = models.CharField(max_length=50)
     instructorid = models.ForeignKey(Instructor)
+    req = models.CharField(max_length=100)
     genedflag = models.BooleanField(default=False)
     days = models.CharField(max_length=100)
     coursetime = models.CharField(max_length=100)
@@ -31,7 +34,10 @@ class FlightPlan(models.Model):
     flightplanID = models.AutoField(primary_key=True)
     content = models.TextField()
     major = models.CharField(max_length=10)
+    majorname = models.CharField(max_length=50)
     graddate = models.DateField()
+    def __str__(self):
+        return self.major
 
 
 # STUDENT(StudentId, FirstName, LastName, School, GraduationDate)
