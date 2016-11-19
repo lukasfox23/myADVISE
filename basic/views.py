@@ -39,3 +39,9 @@ def create(request):
     else:
         form = UserForm()
         return render(request, 'basic/create.html', {'form': form})
+
+@login_required(login_url='../login/')
+def profile(request):
+    current_user = request.user
+    major = StudentInfo.objects.get(userid=current_user.id)
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major})
