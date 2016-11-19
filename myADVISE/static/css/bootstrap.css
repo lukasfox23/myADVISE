@@ -4962,7 +4962,7 @@ a.badge:focus {
   padding-bottom: 30px;
   margin-bottom: 0;
   color: inherit;
-  background-color: #eee;
+  background-color: white;
 }
 .jumbotron h1,
 .jumbotron .h1 {
@@ -5126,7 +5126,7 @@ a.thumbnail.active {
   }
 }
 .progress {
-  height: 20px;
+  height: 40px;
   margin-bottom: 20px;
   overflow: hidden;
   background-color: #f5f5f5;
@@ -5139,7 +5139,7 @@ a.thumbnail.active {
   width: 0;
   height: 100%;
   font-size: 12px;
-  line-height: 20px;
+  line-height: 40px;
   color: #fff;
   text-align: center;
   background-color: #337ab7;
