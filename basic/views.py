@@ -9,6 +9,7 @@ from myADVISE.forms import UserForm
 #login view request is named login...renamed default django function for clairty
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import authenticate
+from datetime import datetime
 # Create your views here.
 @login_required(login_url='login/')
 def index(request):
@@ -30,10 +31,13 @@ def create(request):
     if request.method == "POST":
         form = UserForm(request.POST)
         if form.is_valid():
-            new_user = User.objects.create_user(**form.cleaned_data)
-            new_user = authenticate(username=new_user.username, password=new_user.password)
+            data=form.cleaned_data
+            new_user = User.objects.create_user(username=data['username'], password=data['password'], email=data['email'])
             if new_user:
                 auth_login(request, new_user)
+                userPlan = FlightPlan.objects.filter(major__contains=data['major'])[:1]
+                userInfo = StudentInfo(userid=new_user, major=data['major'], graddate=datetime.now(), progress=userPlan[0], schedule='none')
+                userInfo.save()
             # redirect, or however you want to get to the main view
             return render(request, "basic/basic.html")
     else:
