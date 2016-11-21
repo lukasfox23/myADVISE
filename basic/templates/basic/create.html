@@ -1,5 +1,22 @@
-{% extends "basic/basic.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
+  <title>myADVISE</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap Core CSS -->
+  {% load staticfiles %}
+  <link rel='stylesheet' href="{% static 'css/bootstrap.css' %}" type='text/css'/>
+  <style>
+      body {
+          padding-top: 70px;
+          /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
+      }
+  </style>
+</head>
 {% block content %}
 
 <div class="container" style="padding-top: 100px">
@@ -99,3 +116,4 @@
 </div>
 -->
 {% endblock %}
+</html>
