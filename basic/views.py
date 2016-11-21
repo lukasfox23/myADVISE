@@ -33,6 +33,7 @@ def create(request):
         if form.is_valid():
             data=form.cleaned_data
             new_user = User.objects.create_user(username=data['username'], password=data['password'], email=data['email'])
+            new_user = authenticate(username=data['username'], password=data['password'])
             if new_user:
                 auth_login(request, new_user)
                 userPlan = FlightPlan.objects.filter(major__contains=data['major'])[:1]
