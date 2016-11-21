@@ -1,27 +1,31 @@
 {% extends "basic/header.html" %}
 {% block content %}
-<h1 style="color:white">Hello {{currentUser.username}}!</h1>
-{% for semester in FlightPlan.semesters %}
-  <h5 style="color:white">{{semester.id}}</h1>
-    <table class="table table-bordered table-hover">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Course Title</th>
-          <th>Units</th>
-          <th>Subject</th>
-        </tr>
-      </thead>
-      <tbody>
-    {% for classes in semester.classes %}
-        <tr>
-          <th scope="row">{{forloop.counter}}</th>
-          <td>{{classes.course}}</td>
-          <td>{{classes.cr}}</td>
-          <td>{{classes.subject}}</td>
-        </tr>
-    {% endfor%}
-  </tbody>
-</table>
+<div class="container">
+    <div class="jumbotron">
+        <h1>Hello {{currentUser.username}}!</h1>
+            {% for semester in FlightPlan.semesters %}
+        <h5>{{semester.id}}</h1>
+        <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Course Title</th>
+                <th>Units</th>
+                <th>Subject</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for classes in semester.classes %}
+            <tr>
+                <th scope="row">{{forloop.counter}}</th>
+                <td>{{classes.course}}</td>
+                <td>{{classes.cr}}</td>
+                <td>{{classes.subject}}</td>
+            </tr>
+            {% endfor%}
+        </tbody>
+        </table>
 {% endfor %}
+    </div>
+</div>
 {% endblock %}
