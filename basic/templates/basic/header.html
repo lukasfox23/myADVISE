@@ -11,6 +11,8 @@
   <!-- Bootstrap Core CSS -->
   {% load staticfiles %}
   <link rel='stylesheet' href="{% static 'css/bootstrap.css' %}" type='text/css'/>
+  <!-- jQuery Version 1.11.1 -->
+  <script src="{% static 'js/jquery.js' %}"></script>
   <style>
       body {
           padding-top: 70px;
@@ -61,11 +63,9 @@
 
     {% block content %}
     {% endblock %}
-    <!-- jQuery Version 1.11.1 -->
-    <script src="{% static 'js/jquery.js' %}"></script>
-
     <!-- Bootstrap Core JavaScript -->
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.js' %}"></script>
 
 </body>
 

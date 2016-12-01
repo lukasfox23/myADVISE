@@ -10,20 +10,12 @@ class StudentInfo(models.Model):
     progress = models.TextField()
     schedule = models.TextField()
 
-
-class Instructor(models.Model):
-    instructorid = models.AutoField(primary_key=True)
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    rating = models.FloatField()
-    email = models.EmailField()
-
 class Course(models.Model):
     courseid = models.AutoField(primary_key=True)
     subject = models.CharField(max_length=10)
     coursecode = models.CharField(max_length=10)
     title = models.CharField(max_length=50)
-    instructorid = models.ForeignKey(Instructor)
+    instructor = models.CharField(max_length=100)
     req = models.CharField(max_length=100)
     genedflag = models.BooleanField(default=False)
     days = models.CharField(max_length=100)

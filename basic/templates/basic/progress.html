@@ -12,6 +12,7 @@
                 <th>Course Title</th>
                 <th>Units</th>
                 <th>Subject</th>
+                <th>Completed</th>
             </tr>
         </thead>
         <tbody>
@@ -21,6 +22,7 @@
                 <td>{{classes.course}}</td>
                 <td>{{classes.cr}}</td>
                 <td>{{classes.subject}}</td>
+                <td>{{classes.complete}}</td>
             </tr>
             {% endfor%}
         </tbody>
@@ -28,4 +30,11 @@
 {% endfor %}
     </div>
 </div>
+<script>
+$(document).ready(function(){
+    $('table.table-bordered tbody tr').on('click', function () {
+        $(this).find('td').toggleClass('bg-success');
+      });
+  });
+</script>
 {% endblock %}

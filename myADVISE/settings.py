@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 import dj_database_url
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -79,17 +80,25 @@ WSGI_APPLICATION = 'myADVISE.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 #test database info
-DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'dbsmfb1i9m1slt',                      # Or path to database file if using sqlite3.
-            # The following settings are not used with sqlite3:
-            'USER': 'dswnlxqthdsojc',
-            'PASSWORD': 'zquRJtX1PG3iAT29eubNmkEm-h',
-            'HOST': 'ec2-23-23-225-158.compute-1.amazonaws.com',                      # Empty for localhost through domain sockets or           '127.0.0.1' for localhost through TCP.
-            'PORT': '5432',                      # Set to empty string for default.
+if 'test' in sys.argv:
+    DATABASES = {
+        'default' : {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase'
         }
     }
+else:
+    DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+                'NAME': 'dbsmfb1i9m1slt',                      # Or path to database file if using sqlite3.
+                # The following settings are not used with sqlite3:
+                'USER': 'dswnlxqthdsojc',
+                'PASSWORD': 'zquRJtX1PG3iAT29eubNmkEm-h',
+                'HOST': 'ec2-23-23-225-158.compute-1.amazonaws.com',                      # Empty for localhost through domain sockets or           '127.0.0.1' for localhost through TCP.
+                'PORT': '5432',                      # Set to empty string for default.
+                }
+        }
 #prod database info
 # DATABASES = {
 #         'default': {
