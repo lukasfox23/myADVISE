@@ -19,8 +19,8 @@ def index(request):
 def progress(request):
     current_user = request.user
     major = StudentInfo.objects.get(userid=current_user.id)
-    user_list = FlightPlan.objects.filter(major__contains=major.major)[:1]
-    temp = user_list[0].content
+    user_list = StudentInfo.objects.filter(userid=current_user.id)[:1]
+    temp = user_list[0].progress
     flightplan = json.loads(temp)
     return render(request, "basic/progress.html", {'FlightPlan': flightplan, 'currentUser':current_user})
 
@@ -49,4 +49,17 @@ def create(request):
 def profile(request):
     current_user = request.user
     major = StudentInfo.objects.get(userid=current_user.id)
-    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major})
+    user_list = StudentInfo.objects.filter(userid=current_user.id)[:1]
+    temp = user_list[0].progress
+    flightplan = json.loads(temp)
+    completeCount = 0.0
+    totalCount = 0.0
+    for semester in flightplan["semesters"]:
+        for course in semester["classes"]:
+            totalCount = totalCount + 1
+            if(course["complete"] == True):
+                completeCount = completeCount + 1
+    progressTotal = 0.0
+    progressTotal = float(completeCount/totalCount) * 100
+    progressTotal = round(progressTotal,2)
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal})
