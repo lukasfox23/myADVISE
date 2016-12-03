@@ -22,7 +22,6 @@ urlpatterns = [
     # Examples:
     # url(r'^$', 'myADVISE.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
-
     url(r'^admin/', include(admin.site.urls)),
     url(r'^', include("basic.urls")),
     url(r'^login/$', views.login, {'template_name': 'basic/login.html', 'authentication_form': LoginForm}, name="login"),

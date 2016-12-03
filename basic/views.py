@@ -10,7 +10,9 @@ from myADVISE.forms import UserForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import authenticate
 from datetime import datetime
+from django.template import RequestContext
 # Create your views here.
+
 @login_required(login_url='login/')
 def index(request):
     return render(request, "basic/basic.html")
@@ -65,3 +67,20 @@ def profile(request):
     progressTotal = float(completeCount/totalCount) * 100
     progressTotal = round(progressTotal,2)
     return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal})
+
+@login_required(login_url='../login/')
+def schedule(request):
+    current_user = request.user
+    major = StudentInfo.objects.get(userid=current_user.id)
+    user_list = StudentInfo.objects.filter(userid=current_user.id)[:1]
+    temp = user_list[0].progress
+    flightplan = json.loads(temp)
+    classList = []
+    classHours = 0
+    for semester in flightplan["semesters"]:
+        for course in semester["classes"]:
+            if(course['complete'] != True):
+                classHours = classHours + course['credits']
+                listing = course
+                classList.append(listing)
+    return render(request, "basic/schedule.html", {'flightplan': classList})

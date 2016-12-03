@@ -6,4 +6,5 @@ urlpatterns = [
     url(r'^progress/$', views.progress, name='progress'),
     url(r'^create/$', views.create, name='create'),
     url(r'^profile/$', views.profile, name='profile'),
+    url(r'^schedule/$', views.schedule, name='schedule'),
 ]
