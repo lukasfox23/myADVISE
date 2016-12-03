@@ -17,6 +17,8 @@ def index(request):
 
 @login_required(login_url='../login/')
 def progress(request):
+    if request.method == "POST":
+        return render(request, "basic/basic.html")
     current_user = request.user
     major = StudentInfo.objects.get(userid=current_user.id)
     user_list = StudentInfo.objects.filter(userid=current_user.id)[:1]

@@ -1,9 +1,11 @@
 {% extends "basic/header.html" %}
 {% block content %}
+
 <div class="container">
     <div class="jumbotron">
-        <h1>Hello {{currentUser.username}}!</h1>
-            {% for semester in FlightPlan.semesters %}
+      <form id="update-form" action="" method="post" role="form">
+        {% csrf_token %}
+        {% for semester in FlightPlan.semesters %}
         <h5>{{semester.id}}</h1>
         <table class="table table-bordered table-hover">
         <thead>
@@ -22,18 +24,26 @@
                 <td>{{classes.course}}</td>
                 <td>{{classes.cr}}</td>
                 <td>{{classes.subject}}</td>
-                <td>{{classes.complete}}</td>
+                {% if classes.complete == True %}
+                  <td><input type="checkbox" value="1" checked></td>
+                {% else %}
+                  <td><input type="checkbox" value="1"></td>
+                {% endif %}
             </tr>
             {% endfor%}
         </tbody>
         </table>
 {% endfor %}
+<div class="col-xs-6">
+    <input type="submit" name="update-submit" id="update-submit" tabindex="4" class="form-control btn btn-register" value="Update Classes">
+</div>
+</form>
     </div>
 </div>
 <script>
 $(document).ready(function(){
     $('table.table-bordered tbody tr').on('click', function () {
-        $(this).find('td').toggleClass('bg-success');
+        $(this).find('input[type=checkbox]').click();
       });
   });
 </script>
