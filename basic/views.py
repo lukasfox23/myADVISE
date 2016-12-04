@@ -19,13 +19,30 @@ def index(request):
 
 @login_required(login_url='../login/')
 def progress(request):
-    if request.method == "POST":
-        return render(request, "basic/basic.html")
     current_user = request.user
-    major = StudentInfo.objects.get(userid=current_user.id)
     user_list = StudentInfo.objects.filter(userid=current_user.id)[:1]
     temp = user_list[0].progress
+    #decode the json
     flightplan = json.loads(temp)
+
+    #Get coursenames of checks, iterate through flightplan, mark as complete when match
+    if request.method == "POST":
+        Complete = request.POST.getlist('check')
+        for semester in flightplan['semesters']:
+            for classes in semester['classes']:
+                for index in range(len(Complete)):
+                    if Complete[index] == classes['course']:
+                        classes['complete'] = True
+                        #print(classes['course'])
+                        #print(classes['complete'])
+
+        #re-encode the json
+        UpdatedFlightPlan = json.dumps(flightplan)
+        #Update db for current user
+        StudentInfo.objects.filter(userid=current_user.id).update(progress = UpdatedFlightPlan)
+
+        return render(request, "basic/basic.html")
+
     return render(request, "basic/progress.html", {'FlightPlan': flightplan, 'currentUser':current_user})
 
 def login(request):
