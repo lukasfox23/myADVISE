@@ -3,8 +3,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 #import necessary models
 from django.contrib.auth.models import User
-from basic.models import FlightPlan
-from basic.models import StudentInfo
+from basic.models import FlightPlan,StudentInfo,Course
 from myADVISE.forms import UserForm
 #login view request is named login...renamed default django function for clairty
 from django.contrib.auth import login as auth_login
@@ -40,8 +39,8 @@ def create(request):
             new_user = authenticate(username=data['username'], password=data['password'])
             if new_user:
                 auth_login(request, new_user)
-                userPlan = FlightPlan.objects.filter(major__contains=data['major'])[:1]
-                userInfo = StudentInfo(userid=new_user, major=data['major'], graddate=datetime.now(), progress=userPlan[0], schedule='none')
+                userPlan = FlightPlan.objects.get(major=data['major'])
+                userInfo = StudentInfo(userid=new_user, major=data['major'], graddate=datetime.now(), progress=userPlan.content, schedule='none')
                 userInfo.save()
             # redirect, or however you want to get to the main view
             return render(request, "basic/basic.html")
@@ -77,10 +76,25 @@ def schedule(request):
     flightplan = json.loads(temp)
     classList = []
     classHours = 0
-    for semester in flightplan["semesters"]:
-        for course in semester["classes"]:
-            if(course['complete'] != True):
-                classHours = classHours + course['credits']
-                listing = course
-                classList.append(listing)
-    return render(request, "basic/schedule.html", {'flightplan': classList})
+    scheduleDone = False
+    while(scheduleDone != True):
+        for semester in flightplan["semesters"]:
+            for course in semester["classes"]:
+                if(course['complete'] != True):
+                    if(classHours + int(course['cr']) > 18):
+                        scheduleDone = True
+                        break
+                    else:
+                        classHours = classHours + int(course['cr'])
+                        classList.append(course)
+    #If co-op is next required course, only schedule the co-op
+    if("Co-op" in classList[0]['course']):
+        temp = classList[0]
+        classList = []
+        classHours = temp['cr']
+        classList.append(temp)
+        classHours = 2
+    semesterCourses=[]
+    for thisClass in classList:
+        semesterCourses.append(Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr']))
+    return render(request, "basic/schedule.html", {'flightplan': classList, 'hours' : classHours})

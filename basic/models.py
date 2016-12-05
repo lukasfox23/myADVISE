@@ -28,8 +28,6 @@ class FlightPlan(models.Model):
     major = models.CharField(max_length=10)
     majorname = models.CharField(max_length=50)
     graddate = models.DateField()
-    def __str__(self):
-        return self.major
 
 
 # STUDENT(StudentId, FirstName, LastName, School, GraduationDate)
