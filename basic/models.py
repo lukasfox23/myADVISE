@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 class StudentInfo(models.Model):
     userid = models.ForeignKey(User)
     major = models.CharField(max_length=10)
+    credithour = models.IntegerField()
     graddate = models.DateField()
     progress = models.TextField()
     schedule = models.TextField()
