@@ -4,28 +4,39 @@
     <div class="row">
         <!--USER INFO PANEL-->
         <div class="col-sm-4">
-            <div class="jumbotron">
+            <div class="jumbotron" style="min-height: 750px">
                 <h2>{{ currentUser.username }}</h2>
-                <h4>Major: {{ currentUser.major }}</h4>
-                <h4>Year: </h4>
-                <h4>Flight Plan: </h4>
+                <h4>Major: {{ major.major }}</h4>
+
+                <h4>Course: </h4>
+                <h4>Instructor: </h4>
                 <div class="text-center" style="padding-top: 50px">
                     <button class="btn btn-register btn-block" data-toggle="modal" data-target="#editModal">Edit Info</button>
+                </div>
+                <div class="text-center" style="padding-top: 20px">
+                    <button class="btn btn-register btn-block" data-toggle="modal" data-target="#majorModal">Change Major</button>
                 </div>
             </div>
         </div>
 
         <!--SCHEDULE PANEL-->
         <div class="col-sm-8">
-            <div class="jumbotron">
+            <div class="jumbotron" style="min-height: 750px">
                 <h2>Current Schedule</h2>
-                <h4>This is where a user's schedule would display if they had already generated one.
-                    If they have not generated a schedule yet, this jumbotron will be empty and will
-                    display centered, muted text reading: "No Schedule Available".
-                </h4>
-                <div class="text-center">
-                    <h1 class="glyphicon glyphicon-calendar" style="font-size: 400px"></h1>
-                </div>
+
+                {% if currentUser.schedule == none %}
+
+                    <h4>You have no schedule, please generate one from the homepage.</h4>
+                    <div class="text-center">
+                        <h1 class="glyphicon glyphicon-calendar" style="font-size: 400px"></h1>
+                    </div>
+
+                {% else %}
+
+                    <h1>{{ currentUser.schedule }}</h1>
+
+                {% endif %}
+
                 <h3>Flight Plan Progress</h3>
                 <div class="text-center">
                     <div class="progress">
@@ -38,74 +49,95 @@
         </div>
     </div>
 </div>
+
 <!--EDIT INFO MODAL-->
 <div id="editModal" class="modal fade" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Edit Info</h4>
+                <h4 class="modal-title">Edit Preferences</h4>
             </div>
             <div class="modal-body">
-                <form class="form-horizontal">
+                <form class="form-horizontal" action="/profile/" method="post" role="form">
+                    {% csrf_token %}
                     <div class="form-group">
-                        <label class="control-label col-sm-2" for="email">Email:</label>
-                        <div class="col-sm-10">
-                            <input type="email" class="form-control" id="email" placeholder="Enter email">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-2" for="major">Major:</label>
-                        <div class="col-sm-10">
-                            <select class="form-control" id="major">
-                                <option>Computer Engineering & Computer Science</option>
-                                <option>Chemical Engineering</option>
-                                <option>Mechanical Engineering</option>
-                                <option>Electrical Engineering</option>
+                        <label class="control-label col-sm-4" for="CreditHours">Desired Credit Hours (12-18): </label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="CreditHours" name="CreditHours">
+                                <option>12</option>
+                                <option>13</option>
+                                <option>14</option>
+                                <option>15</option>
+                                <option>16</option>
+                                <option>17</option>
+                                <option>18</option>
                             </select>
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label class="contorl-label col-sm-2" for="flightplan">FlightPlan:</label>
-                        <div class="col-sm-10">
-                            <select class="form-control" id="flightplan">
-                                <option>Four Year</option>
-                                <option>Five Year</option>
-                                <option>Six Year</option>
+                        <label class="control-label col-sm-4" for="DesiredHours">Desired Hours: </label>
+                        <div class="col-sm-8">
+                            <select multiple class="form-control" id="DesiredHours" name="DesiredHours">
+                                <option>8:00 AM</option>
+                                <option>9:00 AM</option>
+                                <option>10:00 AM</option>
+                                <option>11:00 AM</option>
+                                <option>12:00 PM</option>
+                                <option>1:00 PM</option>
+                                <option>2:00 PM</option>
+                                <option>3:00 PM</option>
+                                <option>4:00 PM</option>
+                                <option>5:00 PM</option>
+                                <option>6:00 PM</option>
+                                <option>7:00 PM</option>
+                                <option>8:00 PM</option>
                             </select>
                         </div>
                     </div>
+
+                    <button type="submit" name="EditSubmit" id="EditSubmit" class="btn btn-success">Apply Changes</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success">Apply Changes</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
 </div>
-<!-- <h1 style="color:white">Hello {{currentUser.username}}!</h1>
-{% for semester in FlightPlan.semesters %}
-  <h5 style="color:white">{{semester.id}}</h1>
-    <table class="table table-bordered table-striped">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Course Title</th>
-          <th>Units</th>
-          <th>Subject</th>
-        </tr>
-      </thead>
-      <tbody>
-    {% for classes in semester.classes %}
-        <tr>
-          <th scope="row">{{forloop.counter}}</th>
-          <td>{{classes.course}}</td>
-          <td>{{classes.cr}}</td>
-          <td>{{classes.subject}}</td>
-        </tr>
-    {% endfor%}
-  </tbody>
-</table>
-{% endfor %} -->
+
+<!-- CHANGE MAJOR MODAL -->
+<div id="majorModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Change Major</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" action="/profile/" method="post" role="form">
+
+                    <div class="form-group">
+                    {% csrf_token %}
+                        <label class="control-label col-sm-4" for="DesiredHours">New Major: </label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="NewMajor" name="NewMajor">
+                                <option>BE</option>
+                                <option>CHE</option>
+                                <option>CE</option>
+                                <option>CECS</option>
+                                <option>ECE</option>
+                                <option>IE</option>
+                                <option>ME</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" name="MajorSubmit" id="MajorSubmit" class="btn btn-success" value="Apply Changes">Apply Changes</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
