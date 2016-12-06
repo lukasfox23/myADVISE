@@ -67,6 +67,34 @@ def create(request):
 
 @login_required(login_url='../login/')
 def profile(request):
+
+    current_user, major, progressTotal, flightplan = ProgressBar(request)
+
+    # Action from Modals
+    if request.method == "POST":
+        CreditHours = request.POST.get('CreditHours')
+        DesiredHours = request.POST.getlist('DesiredHours')
+        NewMajor = request.POST.get('NewMajor')
+
+        # If the user doesn't want to change their major
+        if NewMajor is None:
+            # Update Params Modal
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
+        elif major.major == NewMajor:
+            # User tried to update their major without changing their major, do nothing
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
+        else:
+            # Update Major
+            NewFlightPlanJson = FlightPlan.objects.get(major=NewMajor)
+            StudentInfo.objects.filter(userid=current_user.id).update(progress=NewFlightPlanJson.content, major=NewMajor)
+
+            currentUser, major, progressTotal, flightplan = ProgressBar(request)
+
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
+
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
+
+def ProgressBar(request):
     current_user = request.user
     major = StudentInfo.objects.get(userid=current_user.id)
     user_list = StudentInfo.objects.filter(userid=current_user.id)[:1]
@@ -82,7 +110,8 @@ def profile(request):
     progressTotal = 0.0
     progressTotal = float(completeCount/totalCount) * 100
     progressTotal = round(progressTotal,2)
-    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal})
+
+    return current_user, major, progressTotal, flightplan
 
 @login_required(login_url='../login/')
 def schedule(request):
