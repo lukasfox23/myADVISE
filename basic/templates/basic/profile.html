@@ -23,14 +23,14 @@
         <div class="col-sm-8">
             <div class="jumbotron" style="min-height: 750px">
                 <h2>Current Schedule</h2>
-
+                <!--Displays a place holder if the user has not created a schedule yet -->
                 {% if currentUser.schedule == none %}
 
                     <h4>You have no schedule, please generate one from the homepage.</h4>
                     <div class="text-center">
                         <h1 class="glyphicon glyphicon-calendar" style="font-size: 400px"></h1>
                     </div>
-
+                 <!--Displays the user schedule -->
                 {% else %}
 
                     <h1>{{ currentUser.schedule }}</h1>
@@ -40,6 +40,7 @@
                 <h3>Flight Plan Progress</h3>
                 <div class="text-center">
                     <div class="progress">
+                     <!--Displays calculations for the progress bar-->
                         <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width:{{progressTotal}}%">
                             {{ progressTotal }}% Complete
                         </div>

@@ -6,6 +6,7 @@
       <h2>Update Completed Courses Below</h2>
       <form id="update-form" action="/progress/" method="post" role="form">
         {% csrf_token %}
+        <!--Iterates through a users flightplan and displays all courses based on semester-->
         {% for semester in FlightPlan.semesters %}
         <h5>{{semester.id}}</h5>
         <table class="table table-bordered table-hover">
