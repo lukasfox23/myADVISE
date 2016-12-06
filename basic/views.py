@@ -13,10 +13,18 @@ from django.template import RequestContext
 # Create your views here.
 
 @login_required(login_url='login/')
+# Param request - request to the main page
+# Returns main page
+# This function returns the main page of the website if the user is logged in.
 def index(request):
     return render(request, "basic/basic.html")
 
 @login_required(login_url='../login/')
+# Param request - Request to the progress page
+# Returns Progress page
+# This function returns the progress page for the current user, it will grab the current user's progress, which is determined by
+# by class courses included in a student's flightplan and pass that in to the progress page as the flightplan 
+# along with the current user, this will happen if the user is logged in.
 def progress(request):
     current_user = request.user
     user_list = StudentInfo.objects.filter(userid=current_user.id)[:1]
@@ -44,9 +52,16 @@ def progress(request):
 
     return render(request, "basic/progress.html", {'FlightPlan': flightplan, 'currentUser':current_user})
 
+# Param request - Request to the login page
+# Returns login page
+# This function will return the Login page for the user to attempt to log in. 
 def login(request):
     return render(request, "basic/login.html")
 
+# Param request - Request to the create user page
+# Returns create user page
+# This function will return the create user page, the page will attempt to create the user if the credentials they provide are valid
+# if they are not it will return the same page otherwise return them to the main page. 
 def create(request):
     if request.method == "POST":
         form = UserForm(request.POST)
@@ -66,6 +81,11 @@ def create(request):
         return render(request, 'basic/create.html', {'form': form})
 
 @login_required(login_url='../login/')
+# Param request - Request to the profile page
+# Returns profile page
+# This function will return the profile page if the user is logged in, this will grab the major, progress, and flightplan of 
+# the current user to give to the profile page to display and or update. The user can use this page to add preferences to schedule 
+# generation or change their major, also displays a progress bar for the courses completion
 def profile(request):
 
     current_user, major, progressTotal, flightplan = ProgressBar(request)
@@ -94,6 +114,10 @@ def profile(request):
 
     return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
 
+# Param request - Request to the progress action
+# Returns user information related to the user which is the current user, major, progress total, and flightplan of that user
+# This function will return everything for the profile page to use, also used 
+# for the progress bar to display how close the user is to completion
 def ProgressBar(request):
     current_user = request.user
     major = StudentInfo.objects.get(userid=current_user.id)
@@ -114,6 +138,10 @@ def ProgressBar(request):
     return current_user, major, progressTotal, flightplan
 
 @login_required(login_url='../login/')
+# Param request - Request to the schedule page
+# Returns schedule page
+# This function will return the schedule page if the user is logged in. It will grab everything it needs for the user and attempt
+# to create a schedule for the next semester of classes for that user based on their progress so far. 
 def schedule(request):
     current_user = request.user
     major = StudentInfo.objects.get(userid=current_user.id)
