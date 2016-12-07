@@ -10,6 +10,7 @@ class LoginForm(AuthenticationForm):
     password = forms.CharField(label="Password", max_length=30,
                                widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'password', 'type':'password'}))
 
+# Provides the user for all the fields we require which are username, email, password, and major
 class UserForm(forms.Form):
     username = forms.CharField(label="Username", max_length=30,
                                widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'username'}))

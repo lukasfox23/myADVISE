@@ -1,39 +1,50 @@
 {% extends "basic/header.html" %}
 {% block content %}
+
 <div class="container">
     <div class="jumbotron">
-        <h1>Hello {{currentUser.username}}!</h1>
-            {% for semester in FlightPlan.semesters %}
-        <h5>{{semester.id}}</h1>
+      <h2>Update Completed Courses Below</h2>
+      <form id="update-form" action="/progress/" method="post" role="form">
+        {% csrf_token %}
+        <!--Iterates through a users flightplan and displays all courses based on semester-->
+        {% for semester in FlightPlan.semesters %}
+        <h5>{{semester.id}}</h5>
         <table class="table table-bordered table-hover">
         <thead>
             <tr>
-                <th>#</th>
-                <th>Course Title</th>
-                <th>Units</th>
-                <th>Subject</th>
-                <th>Completed</th>
+                <th class="col-md-1 text-center">#</th>
+                <th class="col-md-7">Course Title</th>
+                <th class="col-md-1">Units</th>
+                <th class="col-md-1">Subject</th>
+                <th class="col-md-1">Completed</th>
             </tr>
         </thead>
         <tbody>
             {% for classes in semester.classes %}
             <tr>
-                <th scope="row">{{forloop.counter}}</th>
+                <th class="text-center" scope="row">{{forloop.counter}}</th>
                 <td>{{classes.course}}</td>
                 <td>{{classes.cr}}</td>
                 <td>{{classes.subject}}</td>
-                <td>{{classes.complete}}</td>
+                {% if classes.complete == True %}
+                  <td><input type="checkbox" name="check" value="{{classes.course}}" checked></td>
+                {% else %}
+                  <td><input type="checkbox" name="check" value="{{classes.course}}"></td>
+                {% endif %}
             </tr>
             {% endfor%}
         </tbody>
         </table>
 {% endfor %}
+
+    <input type="submit" name="update-submit" id="update-submit" tabindex="4" class="form-control btn btn-register" value="Update Classes">
+</form>
     </div>
 </div>
 <script>
 $(document).ready(function(){
     $('table.table-bordered tbody tr').on('click', function () {
-        $(this).find('td').toggleClass('bg-success');
+        $(this).find('input[type=checkbox]').click();
       });
   });
 </script>

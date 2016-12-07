@@ -1,0 +1,26 @@
+<h1> Oh, Hello there </h1>
+{% block content %}
+<h1>Final Schedule </h1>
+{{schedule}}
+</br>
+<h1>Courses to choose from</h1>
+{% for thisClass in neededCourses %}
+  {{thisClass}}
+</br>
+{% endfor %}
+<h1>Courses that can be scheduled</h1>
+{% for thisCourse in coursesToSchedule %}
+<h2>Next section</h2>
+{% for thisInfo in thisCourse%}
+{{thisInfo.title}} {{thisInfo.coursetime}}
+</br>
+{% endfor %}
+{% endfor %}
+<h1>Current flightplan</h1>
+{% for semester in flightplan.semesters %}
+{% for course in semester.classes %}
+{{course}}
+</br>
+{% endfor %}
+{% endfor %}
+{% endblock %}
