@@ -82,6 +82,12 @@ class LoginTests(TestCase):
         form_data = {'username': 'temporary', 'password': 'temporary'}
         form = LoginForm(data=form_data)
         self.assertTrue(form.is_valid())
+        form_data = {'username': ' temporary ', 'password': ' temporary '}
+        form = LoginForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_login_authenticate(self):
+        user = authenticate(username='temporary', password='temporary')
 
 class CreateTests(TestCase):
     def setUp(self):
