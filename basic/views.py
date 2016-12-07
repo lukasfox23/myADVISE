@@ -250,11 +250,9 @@ def schedule(request):
                             if(meetPref == False):
                                 break
 
-                            print 'BEFORE', thisCourse.title
                             conflict=checkConflict(timeRangesT, thisCourse)
                             if(conflict == False):
                                 timeRanges = timeRangesT
-                                print 'AFTER', thisCourse.title
                                 schedule.append(thisCourse)
                                 classHours = classHours + int(thisCourse.units)
                                 courseScheduled = True
@@ -371,7 +369,7 @@ def checkConflict(timeRangesT, course):
         daysOffered = []
         if('Th' in days[i]):
             daysOffered.append(3)
-            days[i].replace("Th", "", 1)
+            days[i] = days[i].replace("Th", "", 1)
 
         for day in days[i]:
             if day == 'M':
@@ -386,6 +384,7 @@ def checkConflict(timeRangesT, course):
         a1, a2 = time_range_to_seconds(timeString[i])
 
         for day in daysOffered:
+            print day
             for timeRange in timeRangesT[day]:
                 b1 = timeRange[0]
                 b2 = timeRange[1]
