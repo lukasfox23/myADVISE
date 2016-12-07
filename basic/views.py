@@ -107,7 +107,7 @@ def profile(request):
         # If the user doesn't want to change their major
         if NewMajor is None:
             # Update Params Modal
-            # StudentInfo.objects.filter(userid=current_user.id).update(desiredHours=DesiredHours, credithour=CreditHours)
+            StudentInfo.objects.filter(userid=current_user.id).update(desiredhours=DesiredHours, credithour=CreditHours)
             return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
         elif major.major == NewMajor:
             # User tried to update their major without changing their major, do nothing
