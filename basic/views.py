@@ -236,27 +236,22 @@ def schedule(request):
     courseScheduled = False
 
     preferencesExhausted = False
-    # check if time preference
+
     if(desiredHours != "Don't Care"):
-        # continue until all classes check
         while(preferencesExhausted == False):
             for courseSet in semesterCourses:
                 courseScheduled = False
                 finishedSet = False
-                # continue until course set finished or course found
                 while(courseScheduled == False and finishedSet == False):
                     for thisCourse in courseSet:
-                        # check if adding this course would break hours pref
                         if(classHours + int(thisCourse.units) > preferredHours + 1):
-                            #scheduleDone = True
+                            scheduleDone = True
                             courseScheduled = True
                             break
                         else:
                             timeRangesT = copy.deepcopy(timeRanges)
                             timeString = thisCourse.coursetime.split(",")
                             meetPref = True
-
-                            # verify time meets preference
                             for time in timeString:
                                 splitTimes = time.split('-')
                                 if(desiredHours == 'After Noon'):
@@ -266,11 +261,9 @@ def schedule(request):
                                     if 'pm' in splitTimes[0]:
                                         meetPref = False
 
-                            # exit if preference notmet
                             if(meetPref == False):
                                 break
 
-                            # check if course conflicts
                             conflict=checkConflict(timeRangesT, thisCourse)
                             if(conflict == False):
                                 timeRanges = timeRangesT
@@ -281,7 +274,6 @@ def schedule(request):
                     finishedSet = True
             preferencesExhausted = True
 
-    # perform similar algorithm without preferneces
     while(scheduleDone == False):
         for courseSet in semesterCourses:
             courseScheduled = False
@@ -291,7 +283,7 @@ def schedule(request):
                 for thisCourse in courseSet:
                     #Check if the preffered hours are greatly exceeded
                     if((classHours + int(thisCourse.units))> (preferredHours + 1)):
-                        #scheduleDone = True
+                        scheduleDone = True
                         courseScheduled = True
                         break
                     else:
@@ -309,14 +301,9 @@ def schedule(request):
     genedFound = False
 
     isCoop = False
-
-    # check if co-op
     if('SEMINAR' not in schedule[0].title):
         if("CO-OP" in schedule[0].title):
             isCoop = True
-    # if gened available and not co-op, find gened
-    # schedule gened using similar algorithm
-    # replace one course with a gened
     if(genedList and isCoop is False):
         schedule.pop()
         courseList = Course.objects.filter(genedflag = True).exclude(coursetime = "")
@@ -344,14 +331,10 @@ def schedule(request):
     finalSchedule = json.dumps(finalSchedule)
     user_list.schedule = finalSchedule
     user_list.save()
-    current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
     print classHours
+    current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
     return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
-###
-# convert time string to seconds
-# param thisTime: time to convert to seconds
-# return: time in seconds
 def convert_to_seconds(thisTime):
     afternoonFlag = False
     #adjust for pm if needed
@@ -374,11 +357,7 @@ def convert_to_seconds(thisTime):
     thisTime
     return thisTime
 
-###
-# converts a time range string to seconds string
-# param time_str: string to converts
-# return a1: beginning time in seconds
-# return a2: ending time in seconds
+
 def time_range_to_seconds(time_str):
 	times = time_str.split('-')
 
@@ -387,18 +366,9 @@ def time_range_to_seconds(time_str):
 
 	return a1, a2
 
-###
-# checks if two ranges intersect
-# param a1: time 1 beginning
-# param a2: time 1 ending
-# param b1: time 2 beginning
-# param b2: time 2 ending
 def check_range_intersect(a1, a2, b1, b2):
 	if(a1 <= b2) and (a2 >= b1):
-		return True;
-	return False;
-
-		return True;
+	       return True;
 	return False;
 
 ####
@@ -408,25 +378,15 @@ def check_range_intersect(a1, a2, b1, b2):
 # returns bool indicating conflict
 def checkConflict(timeRangesT, course):
     days = course.days
-
-    # split days
     days = days.split(",")
-
-    # split times
     timeString = course.coursetime.split(",")
     conflict = False
-
-    # loop through days list checking for conflicts
     for i in range(len(days)):
         daysOffered = []
-
-        # get days offered baased on days string
-        # thursday is special case; if detected log and remove
         if('Th' in days[i]):
             daysOffered.append(3)
             days[i] = days[i].replace("Th", "", 1)
 
-        # checki for remaining dayds
         for day in days[i]:
             if day == 'M':
                 daysOffered.append(0)
@@ -437,10 +397,8 @@ def checkConflict(timeRangesT, course):
             elif day == 'F':
                 daysOffered.append(4)
 
-        # get time range for time for this day string
         a1, a2 = time_range_to_seconds(timeString[i])
 
-        # verify time range works for each day offered
         for day in daysOffered:
             for timeRange in timeRangesT[day]:
                 b1 = timeRange[0]
@@ -448,7 +406,11 @@ def checkConflict(timeRangesT, course):
                 if(check_range_intersect(a1, a2, b1, b2) == True):
                     conflict = True
 
-        # if no conflict, update timeRanges list
         if(conflict == False):
             timeRange = [a1, a2]
-            for day 
+            for day in daysOffered:
+                timeRangesT[day].append(timeRange)
+        else:
+            break
+
+    return conflict
