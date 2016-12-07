@@ -195,7 +195,7 @@ def schedule(request):
             if(semester['id'] == "Gen Eds" and course['complete'] != True):
                 genedList.append(course)
     #If co-op is next required course, only schedule the co-op. Otherwise ignore all co-ops
-    if("Co-op" in classList[0]['course']):
+    if("Co-op" in classList[0]['course'] and "Seminar" not in classList[0]['course']):
         temp = classList[0]
         classList = []
         classList.append(temp)
@@ -204,7 +204,7 @@ def schedule(request):
         preferredHours = 0
     else:
         for thisClass in classList:
-            if("Co-op" in thisClass['course']):
+            if("Co-op" in thisClass['course'] and "Seminar" not in classList[0]['course'] ):
                 classList.remove(thisClass)
     semesterCourses=[]
     #retrieve all possible classes for scheduling
@@ -239,7 +239,8 @@ def schedule(request):
                             classHours = classHours + int(thisCourse.units)
                             courseScheduled = True
                             break
-                    finishedSet = True
+                finishedSet = True
+        scheduleDone = True
     #schedule gened if available
     genedFound = False
     if(genedList and ("CO-OP" not in schedule[0].title)):
@@ -268,7 +269,7 @@ def schedule(request):
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
     user_list.schedule = finalSchedule
     user_list.save()
-    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':courseList})
+    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule})
 
 def convert_to_seconds(thisTime):
     afternoonFlag = False
