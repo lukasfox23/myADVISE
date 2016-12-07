@@ -252,6 +252,7 @@ def schedule(request):
                             timeRangesT = copy.deepcopy(timeRanges)
                             timeString = thisCourse.coursetime.split(",")
                             meetPref = True
+                            print thisCourse.title
                             for time in timeString:
                                 splitTimes = time.split('-')
                                 if(desiredHours == 'After Noon'):
@@ -270,6 +271,7 @@ def schedule(request):
                                 schedule.append(thisCourse)
                                 classHours = classHours + int(thisCourse.units)
                                 courseScheduled = True
+                                print thisCourse.title
                                 break
                     finishedSet = True
             preferencesExhausted = True
