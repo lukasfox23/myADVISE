@@ -183,6 +183,7 @@ def schedule(request):
     user_list = StudentInfo.objects.get(userid=current_user.id)
     temp = user_list.progress
     preferredHours = user_list.credithour
+    desiredHours = user_list.desiredhours
     flightplan = json.loads(temp)
     classList = []
     genedList = []
