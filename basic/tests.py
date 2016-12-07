@@ -3,9 +3,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
 from django.core.urlresolvers import resolve
 from django.http import HttpRequest
-from views import index, login, create, profile, ProgressBar
+from views import index, login, create, profile, ProgressBar, convert_to_seconds, time_range_to_seconds, checkConflict, check_range_intersect, schedule
 from myADVISE.forms import LoginForm, UserForm
-from models import FlightPlan, StudentInfo
+from models import FlightPlan, StudentInfo, Course
 from datetime import datetime
 import json
 # Create your tests here.
@@ -176,7 +176,7 @@ class ProfileTests(TestCase):
     def test_progress_bar_correct(self):
         request = self.factory.get('/')
         request.user = authenticate(username='blakrtest', password='blakrtest')
-        current_user, student, progressTotal, flightplan = ProgressBar(request)
+        current_user, student, progressTotal, flightplan, DecodedSchedule, CourseDict = ProgressBar(request)
         testStudent = StudentInfo.objects.get(userid = request.user)
         testJson = json.loads(testStudent.progress)
         self.assertEqual(current_user, request.user)
@@ -197,12 +197,82 @@ class ProfileTests(TestCase):
         response = profile(request)
         self.assertIn('<h4>You have no schedule, please generate one from the homepage.</h4>', response.content)
 
-    # def test_schedule_display(self):
-    #     request = self.factory.get('/')
-    #     request.user = authenticate(username='blakrtest', password='blakrtest')
-    #     currentUserInfo = StudentInfo.objects.get(userid = request.user)
-    #     response = profile(request)
-    #     self.assertIn(currentUserInfo.schedule, response.content)
-
+    def test_schedule_display(self):
+        request = self.factory.get('/')
+        request.user = authenticate(username='blakrtest', password='blakrtest')
+        currentUserInfo = StudentInfo.objects.get(userid = request.user)
+        response = profile(request)
+        self.assertIn('<table class="table table-bordered table-hover">', response.content)
+#'\"6531\": {\"days\": \"M, W\", \"coursecode\": \"423\", \"title\": \"BIOENGR MEASUREMENTS LAB\", \"coursetime\": \"02:00pm-02:50pm, 02:00pm-03:40pm\", \"subject\": \"BE\"},'
 class ScheduleTests(TestCase):
     fixtures = ['myADVISE.json']
+    def setUp(self):
+        self.client = Client()
+        self.factory = RequestFactory()
+
+    def test_convert_to_seconds(self):
+        time = '02:00pm'
+        seconds = convert_to_seconds(time)
+        self.assertEqual(seconds, 50400)
+
+    def test_time_range_to_seconds(self):
+        timeRange = '02:00pm-02:50pm'
+        seconds1, seconds2 = time_range_to_seconds(timeRange)
+        self.assertEqual(seconds1, 50400)
+        self.assertEqual(seconds2, 53400)
+
+    def test_checkConflict_conflict(self):
+        courseToAdd = Course.objects.get(pk=8)
+        time = '01:00pm-02:15pm'
+        a1, a2 = time_range_to_seconds(time)
+        timeRanges = [[],[],[],[],[]]
+        timeRange = [a1,a2]
+        timeRanges[0].append(timeRange)
+        timeRanges[1].append(timeRange)
+        timeRanges[2].append(timeRange)
+        timeRanges[3].append(timeRange)
+        timeRanges[4].append(timeRange)
+        conflictBool = checkConflict(timeRanges, courseToAdd)
+        self.assertTrue(conflictBool)
+
+    def test_checkConflict_no_conflict(self):
+        courseToAdd = Course.objects.get(pk=8)
+        print courseToAdd.days
+        time = '01:00pm-01:45pm'
+        time2 = '01:00pm-02:30pm'
+        a1, a2 = time_range_to_seconds(time)
+        b1, b2 = time_range_to_seconds(time2)
+        timeRanges = [[],[],[],[],[]]
+        timeRange1 = [a1,a2]
+        timeRange2 = [b1,b2]
+        timeRanges[0].append(timeRange1)
+        timeRanges[1].append(timeRange2)
+        timeRanges[2].append(timeRange1)
+        timeRanges[3].append(timeRange1)
+        timeRanges[4].append(timeRange2)
+        conflictBool = checkConflict(timeRanges, courseToAdd)
+        self.assertFalse(conflictBool)
+
+    def test_check_range_intersect_true(self):
+        time = '01:00pm-01:45pm'
+        time2 = '01:00pm-02:30pm'
+        a1, a2 = time_range_to_seconds(time)
+        b1, b2 = time_range_to_seconds(time2)
+        intersect = check_range_intersect(a1, a2, b1, b2)
+        self.assertTrue(intersect)
+
+    def test_check_range_intersect_false(self):
+        time = '01:00pm-01:45pm'
+        time2 = '02:00pm-02:30pm'
+        a1, a2 = time_range_to_seconds(time)
+        b1, b2 = time_range_to_seconds(time2)
+        intersect = check_range_intersect(a1, a2, b1, b2)
+        self.assertFalse(intersect)
+
+    def test_schedule(self):
+        request = self.factory.get('/')
+        request.user = authenticate(username='blakrtest2', password='blakrtest2')
+        correctSchedule = "{\"6531\": {\"days\": \"M, W\", \"coursecode\": \"423\", \"title\": \"BIOENGR MEASUREMENTS LAB\", \"coursetime\": \"02:00pm-02:50pm, 02:00pm-03:40pm\", \"subject\": \"BE\"}, \"6404\": {\"days\": \"T\", \"coursecode\": \"295\", \"title\": \"INTRO LABORATORY I - SL\", \"coursetime\": \"10:00am-11:50am\", \"subject\": \"PHYS\"}, \"6518\": {\"days\": \"TTh\", \"coursecode\": \"101\", \"title\": \"INTR BIOENGINEERING\", \"coursetime\": \"04:00pm-04:50pm\", \"subject\": \"BE\"}, \"6573\": {\"days\": \"MWF\", \"coursecode\": \"205\", \"title\": \"MECHANICS I:STATICS\", \"coursetime\": \"11:00am-11:50am\", \"subject\": \"CEE\"}, \"5843\": {\"days\": \"MWF, TTh\", \"coursecode\": \"201\", \"title\": \"ENGINEERING ANALYSIS III\", \"coursetime\": \"09:00am-09:50am, 09:30am-10:45am\", \"subject\": \"ENGR\"}, \"5846\": {\"days\": \"TTh\", \"coursecode\": \"205\", \"title\": \"DIFF EQNS FOR ENGRG\", \"coursetime\": \"09:30am-10:45am\", \"subject\": \"ENGR\"}, \"6428\": {\"days\": \"TTh\", \"coursecode\": \"240\", \"title\": \"UNITY OF LIFE - S\", \"coursetime\": \"09:30am-10:45am\", \"subject\": \"BIOL\"}}"
+        response = schedule(request)
+        student = StudentInfo.objects.get(pk = 53)
+        self.assertEqual(student.schedule, correctSchedule)

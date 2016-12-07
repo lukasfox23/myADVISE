@@ -213,16 +213,16 @@ def schedule(request):
         classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr']).exclude(coursetime = "")
         if(classObject):
             semesterCourses.append(classObject)
-    
+
     #select final courses
     schedule = []
     timeRanges = [[] for i in range(5)]
     classHours = 0
     scheduleDone = False
     courseScheduled = False
-    
-    preferencesExhausted = False 
-    
+
+    preferencesExhausted = False
+
     if(preferredHours != "Don't Care"):
         while(preferencesExhausted == False):
             for courseSet in semesterCourses:
@@ -237,21 +237,21 @@ def schedule(request):
                         else:
                             timeRangesT = copy.deepcopy(timeRanges)
                             timeString = course.coursetime.split(",")
-                            meetPref = True 
+                            meetPref = True
                             for time in timeString:
                                 timeComponents = time.split(":")
                                 startHour = int(timeComponents[0])
-                                
-                                if(preferredHours == 'After Noon'):  
+
+                                if(preferredHours == 'After Noon'):
                                     if(startHour < 12):
-                                        meetPref = False             
+                                        meetPref = False
                                 else:
                                     if(startHour > 12):
-                                        meetPref = False 
-                            
+                                        meetPref = False
+
                             if(meetPref == False):
                                 break
-                                    
+
                             conflict=checkConflict(timeRangesT, thisCourse)
                             if(conflict == False):
                                 timeRanges = timeRangesT
@@ -261,7 +261,7 @@ def schedule(request):
                                 break
                     finishedSet = True
             preferencesExhausted = True
-    
+
     while(scheduleDone == False):
         for courseSet in semesterCourses:
             courseScheduled = False
@@ -365,7 +365,7 @@ def checkConflict(timeRangesT, course):
         daysOffered = []
         if('Th' in days[i]):
             daysOffered.append(3)
-            days[i].replace("Th", "", 1)
+            days[i] = days[i].replace("Th", "", 1)
 
         for day in days[i]:
             if day == 'M':
@@ -380,6 +380,7 @@ def checkConflict(timeRangesT, course):
         a1, a2 = time_range_to_seconds(timeString[i])
 
         for day in daysOffered:
+            print day
             for timeRange in timeRangesT[day]:
                 b1 = timeRange[0]
                 b2 = timeRange[1]
