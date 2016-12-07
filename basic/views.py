@@ -245,7 +245,7 @@ def schedule(request):
                 while(courseScheduled == False and finishedSet == False):
                     for thisCourse in courseSet:
                         if(classHours + int(thisCourse.units) > preferredHours + 1):
-                            scheduleDone = True
+                            #scheduleDone = True
                             courseScheduled = True
                             break
                         else:
@@ -283,7 +283,7 @@ def schedule(request):
                 for thisCourse in courseSet:
                     #Check if the preffered hours are greatly exceeded
                     if((classHours + int(thisCourse.units))> (preferredHours + 1)):
-                        scheduleDone = True
+                        #scheduleDone = True
                         courseScheduled = True
                         break
                     else:
