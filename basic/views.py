@@ -145,32 +145,42 @@ def ProgressBar(request):
     progressTotal = round(progressTotal,2)
 
     # Grabbing the schedule
-    EncodedSchedule = user_list[0].schedule
-    DecodedSchedule = json.loads(EncodedSchedule)
-
     # Get Times/Dates
     CourseName = ''
     CourseDict = {}
     TimeDict = {}
+    ScheduleCheck = {}
+    ScheduleCheck = user_list[0].schedule
+    EncodedSchedule = {}
+    DecodedSchedule = {}
 
-    # Create a coursename, date, time dict from schedule
-    for key,value in DecodedSchedule.items():
-        Time = value['coursetime'].split(',')
-        TempDays = value['days'].split(',')
+    if ScheduleCheck == 'none':
+        return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
+
+    else:
+
+        EncodedSchedule = user_list[0].schedule
+        DecodedSchedule = json.loads(EncodedSchedule)
+
+
+        # Create a coursename, date, time dict from schedule
+        for key,value in DecodedSchedule.items():
+            Time = value['coursetime'].split(',')
+            TempDays = value['days'].split(',')
 
         # Replace Th with H
-        for index in range(len(TempDays)):
-            TempDays[index].upper()
-            TempDays[index] = TempDays[index].replace("Th", "Z")
-            TempDays[index] = TempDays[index].replace("TH", "Z")
+            for index in range(len(TempDays)):
+                TempDays[index].upper()
+                TempDays[index] = TempDays[index].replace("Th", "Z")
+                TempDays[index] = TempDays[index].replace("TH", "Z")
 
-        # Finish up dict
-        Days = TempDays
-        CourseName = value['subject'] + ' ' + value['coursecode']
-        TimeDict = dict(zip(Days, Time))
-        CourseDict[CourseName] = TimeDict
+            # Finish up dict
+            Days = TempDays
+            CourseName = value['subject'] + ' ' + value['coursecode']
+            TimeDict = dict(zip(Days, Time))
+            CourseDict[CourseName] = TimeDict
 
-    return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
+        return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
 
 @login_required(login_url='../login/')
 # Param request - Request to the schedule page

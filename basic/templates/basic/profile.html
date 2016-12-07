@@ -8,21 +8,28 @@
                 <h2>{{ currentUser.username }}</h2>
                 <h4>Major: {{ major.major }}</h4>
                 <!-- Display a scrollable text field representing schedule -->
+                {% if major.schedule == 'none' %}
+                <h4>
+                    Your class times will
+                    be shown here.
+                </h4>
+                {% else %}
                 <div class="well well-sm pre-scrollable">
                 {% for key, CourseName in CourseDict.items %}
                 <h5>{{ key }}</h5>
                 {% for Day, Hour in CourseName.items %}
-                <h5>{% if Day == 'H'%}
+                <h5>{% if Day == 'Z'%}
                     Th: {{ Hour }}
-                    {% elif Day == 'TH' %}
+                    {% elif Day == 'TZ' %}
                     TTh: {{ Hour }}
                     {% else %}
                     {{ Day }}: {{ Hour }}
                     {% endif %}
                 </h5>
-                {% endfor%}
+                {% endfor %}
                 {% endfor %}
                 </div>
+                {% endif %}
                 <!-- Options to edit account info -->
                 <div class="text-center" style="padding-top: 80px">
                     <button class="btn btn-register btn-block" data-toggle="modal" data-target="#editModal">Edit Info</button>
@@ -38,7 +45,7 @@
             <div class="jumbotron" style="min-height: 750px">
                 <h2>Current Schedule</h2>
                 <!--Displays a place holder if the user has not created a schedule yet -->
-                {% if major.schedule == none %}
+                {% if major.schedule == 'none' %}
 
                     <h4>You have no schedule, please generate one from the homepage.</h4>
                     <div class="text-center">
