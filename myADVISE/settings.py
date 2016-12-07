@@ -112,6 +112,9 @@ else:
 #         }
 #     }
 
+FIXTURE_DIRS = (
+   'fixtures/',
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
