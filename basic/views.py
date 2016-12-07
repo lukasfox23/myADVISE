@@ -232,42 +232,7 @@ def schedule(request):
                         break
                     else:
                         timeRangesT = copy.deepcopy(timeRanges)
-                        days = thisCourse.days
-                        days = days.split(",")
-                        timeString = thisCourse.coursetime.split(",")
-
-                        conflict = False
-                        for i in range(len(days)):
-                            daysOffered = []
-                            if('Th' in days[i]):
-                                daysOffered.append(3)
-                                days[i].replace("Th", "", 1)
-
-                            for day in days[i]:
-                                if day == 'M':
-                                    daysOffered.append(0)
-                                elif day == 'T':
-                                    daysOffered.append(1)
-                                elif day == 'W':
-                                    daysOffered.append(2)
-                                elif day == 'F':
-                                    daysOffered.append(4)
-
-                            a1, a2 = time_range_to_seconds(timeString[i])
-
-                            for day in daysOffered:
-                                for timeRange in timeRangesT[day]:
-                                    b1 = timeRange[0]
-                                    b2 = timeRange[1]
-                                    if(check_range_intersect(a1, a2, b1, b2) == True):
-                                        conflict = True
-
-                            if(conflict == False):
-                                timeRange = [a1, a2]
-                                for day in daysOffered:
-                                    timeRangesT[day].append(timeRange)
-                            else:
-                                break
+                        conflict=checkConflict(timeRangesT, thisCourse)
                         if(conflict == False):
                             timeRanges = timeRangesT
                             schedule.append(thisCourse)
@@ -290,43 +255,7 @@ def schedule(request):
                         req = courseName.split("-")
                         if(gened['subject'] == req[1]):
                             timeRangesT = copy.deepcopy(timeRanges)
-                            days = course.days
-                            days = days.split(",")
-                            timeString = course.coursetime.split(",")
-                            conflict = False
-                            for i in range(len(days)):
-                                daysOffered = []
-                                if('Th' in days[i]):
-                                    daysOffered.append(3)
-                                    days[i].replace("Th", "", 1)
-
-                                for day in days[i]:
-                                    if day == 'M':
-                                        daysOffered.append(0)
-                                    elif day == 'T':
-                                        daysOffered.append(1)
-                                    elif day == 'W':
-                                        daysOffered.append(2)
-                                    elif day == 'F':
-                                        daysOffered.append(4)
-                                if(course.coursetime):
-                                    a1, a2 = time_range_to_seconds(timeString[i])
-                                else:
-                                    break
-
-                                for day in daysOffered:
-                                    for timeRange in timeRangesT[day]:
-                                        b1 = timeRange[0]
-                                        b2 = timeRange[1]
-                                        if(check_range_intersect(a1, a2, b1, b2) == True):
-                                            conflict = True
-
-                                if(conflict == False):
-                                    timeRange = [a1, a2]
-                                    for day in daysOffered:
-                                        timeRangesT[day].append(timeRange)
-                                else:
-                                    break
+                            conflict=checkConflict(timeRangesT, course)
                             if(conflict == False):
                                 timeRanges = timeRangesT
                                 schedule.append(course)
@@ -376,3 +305,47 @@ def check_range_intersect(a1, a2, b1, b2):
 	if(a1 <= b2) and (a2 >= b1):
 		return True;
 	return False;
+
+####
+# checks if course times overlap
+# param timeRanges: stores current time ranges for scheduled courses
+# param course: course to be added
+# returns bool indicating conflict
+def checkConflict(timeRangesT, course):
+    days = course.days
+    days = days.split(",")
+    timeString = course.coursetime.split(",")
+    conflict = False
+    for i in range(len(days)):
+        daysOffered = []
+        if('Th' in days[i]):
+            daysOffered.append(3)
+            days[i].replace("Th", "", 1)
+
+        for day in days[i]:
+            if day == 'M':
+                daysOffered.append(0)
+            elif day == 'T':
+                daysOffered.append(1)
+            elif day == 'W':
+                daysOffered.append(2)
+            elif day == 'F':
+                daysOffered.append(4)
+
+        a1, a2 = time_range_to_seconds(timeString[i])
+
+        for day in daysOffered:
+            for timeRange in timeRangesT[day]:
+                b1 = timeRange[0]
+                b2 = timeRange[1]
+                if(check_range_intersect(a1, a2, b1, b2) == True):
+                    conflict = True
+
+        if(conflict == False):
+            timeRange = [a1, a2]
+            for day in daysOffered:
+                timeRangesT[day].append(timeRange)
+        else:
+            break
+
+    return conflict
