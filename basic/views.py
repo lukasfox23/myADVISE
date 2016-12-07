@@ -196,7 +196,7 @@ def schedule(request):
             if(semester['id'] == "Gen Eds" and course['complete'] != True):
                 genedList.append(course)
     #If co-op is next required course, only schedule the co-op. Otherwise ignore all co-ops
-    if("Co-op" in classList[0]['course'] and "Seminar" not in classList[0]['course']):
+    if("CO-OP" in classList[0]['course'] and "SEMINAR" not in classList[0]['course']):
         temp = classList[0]
         classList = []
         classList.append(temp)
@@ -205,7 +205,7 @@ def schedule(request):
         preferredHours = 0
     else:
         for thisClass in classList:
-            if("Co-op" in thisClass['course'] and "Seminar" not in classList[0]['course'] ):
+            if("CO-OP" in thisClass['course'] and "SEMINAR" not in classList[0]['course'] ):
                 classList.remove(thisClass)
     semesterCourses=[]
     #retrieve all possible classes for scheduling
@@ -213,17 +213,17 @@ def schedule(request):
         classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr']).exclude(coursetime = "")
         if(classObject):
             semesterCourses.append(classObject)
-    
+
     #select final courses
     schedule = []
     timeRanges = [[] for i in range(5)]
     classHours = 0
     scheduleDone = False
     courseScheduled = False
-    
-    preferencesExhausted = False 
-    
-    if(preferredHours != "Don't Care"):
+
+    preferencesExhausted = False
+
+    if(desiredHours != "Don't Care"):
         while(preferencesExhausted == False):
             for courseSet in semesterCourses:
                 courseScheduled = False
@@ -236,32 +236,32 @@ def schedule(request):
                             break
                         else:
                             timeRangesT = copy.deepcopy(timeRanges)
-                            timeString = course.coursetime.split(",")
-                            meetPref = True 
+                            timeString = thisCourse.coursetime.split(",")
+                            meetPref = True
                             for time in timeString:
-                                timeComponents = time.split(":")
-                                startHour = int(timeComponents[0])
-                                
-                                if(preferredHours == 'After Noon'):  
-                                    if(startHour < 12):
-                                        meetPref = False             
-                                else:
-                                    if(startHour > 12):
-                                        meetPref = False 
-                            
+                                splitTimes = time.split('-')
+                                if(desiredHours == 'After Noon'):
+                                    if 'am' in splitTimes[0]:
+                                        meetPref = False
+                                elif(desiredHours == 'Before Noon'):
+                                    if 'pm' in splitTimes[0]:
+                                        meetPref = False
+
                             if(meetPref == False):
                                 break
-                                    
+
+                            print 'BEFORE', thisCourse.title
                             conflict=checkConflict(timeRangesT, thisCourse)
                             if(conflict == False):
                                 timeRanges = timeRangesT
+                                print 'AFTER', thisCourse.title
                                 schedule.append(thisCourse)
                                 classHours = classHours + int(thisCourse.units)
                                 courseScheduled = True
                                 break
                     finishedSet = True
             preferencesExhausted = True
-    
+
     while(scheduleDone == False):
         for courseSet in semesterCourses:
             courseScheduled = False
@@ -270,7 +270,7 @@ def schedule(request):
             while(courseScheduled == False and finishedSet == False):
                 for thisCourse in courseSet:
                     #Check if the preffered hours are greatly exceeded
-                    if(classHours + int(thisCourse.units) > preferredHours + 1):
+                    if((classHours + int(thisCourse.units))> (preferredHours + 1)):
                         scheduleDone = True
                         courseScheduled = True
                         break
@@ -283,12 +283,16 @@ def schedule(request):
                             classHours = classHours + int(thisCourse.units)
                             courseScheduled = True
                             break
-                finishedSet = True
+                    finishedSet = True
         scheduleDone = True
     #schedule gened if available
     genedFound = False
-    if(genedList and ("CO-OP" not in schedule[0].title)):
-        schedule.pop()
+
+    isCoop = False
+    if('SEMINAR' not in schedule[0].title):
+        if("CO-OP" in schedule[0].title):
+            isCoop = True
+    if(genedList and isCoop is False):
         courseList = Course.objects.filter(genedflag = True).exclude(coursetime = "")
         while(genedFound == False):
             for gened in genedList:
@@ -307,14 +311,14 @@ def schedule(request):
                                 genedFound = True
                                 courseScheduled = True
                                 break
-                genedFound = True
+            genedFound = True
     finalSchedule = dict()
     for course in schedule:
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
     finalSchedule = json.dumps(finalSchedule)
     user_list.schedule = finalSchedule
     user_list.save()
-    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule})
+    return render(request, "basic/basic.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule})
 
 def convert_to_seconds(thisTime):
     afternoonFlag = False
