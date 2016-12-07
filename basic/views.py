@@ -184,7 +184,8 @@ def schedule(request):
         for courseSet in semesterCourses:
             courseScheduled = False
             #loop through variations of courses until one is scheduled
-            while(courseScheduled == False):
+            finishedSet = False
+            while(courseScheduled == False and finishedSet == False):
                 for thisCourse in courseSet:
                     #Check if the preffered hours are greatly exceeded
                     if(classHours + int(thisCourse.units) > preferredHours + 1):
@@ -234,11 +235,8 @@ def schedule(request):
                             schedule.append(thisCourse)
                             classHours = classHours + int(thisCourse.units)
                             courseScheduled = True
-                        #append course to final schedule
-                        schedule.append(thisCourse)
-                        classHours = classHours + int(thisCourse.units)
-                        courseScheduled = True
-                        break
+                            break
+                    finishedSet = True
     #schedule gened if available
     genedFound = False
     if(genedList and ("CO-OP" not in schedule[0].title)):
@@ -249,19 +247,61 @@ def schedule(request):
                 if(genedFound == True):
                     break
                 for course in courseList:
+                    if not course.coursetime:
+                        break
                     courseName = course.title
                     if("-" in courseName):
                         req = courseName.split("-")
                         if(gened['subject'] == req[1]):
-                            schedule.append(course)
-                            genedFound = True
-                            break
+                            timeRangesT = copy.deepcopy(timeRanges)
+                            days = course.days
+                            days = days.split(",")
+                            timeString = course.coursetime.split(",")
+                            conflict = False
+                            for i in range(len(days)):
+                                daysOffered = []
+                                if('Th' in days[i]):
+                                    daysOffered.append(3)
+                                    days[i].replace("Th", "", 1)
+
+                                for day in days[i]:
+                                    if day == 'M':
+                                        daysOffered.append(0)
+                                    elif day == 'T':
+                                        daysOffered.append(1)
+                                    elif day == 'W':
+                                        daysOffered.append(2)
+                                    elif day == 'F':
+                                        daysOffered.append(4)
+
+                                a1, a2 = time_range_to_seconds(timeString[i])
+
+                                for day in daysOffered:
+                                    for timeRange in timeRangesT[day]:
+                                        b1 = timeRange[0]
+                                        b2 = timeRange[1]
+                                        if(check_range_intersect(a1, a2, b1, b2) == True):
+                                            conflict = True
+
+                                if(conflict == False):
+                                    timeRange = [a1, a2]
+                                    for day in daysOffered:
+                                        timeRangesT[day].append(timeRange)
+                                else:
+                                    break
+                            if(conflict == False):
+                                timeRanges = timeRangesT
+                                schedule.append(course)
+                                genedFound = True
+                                courseScheduled = True
+                                break
+                genedFound = True
     finalSchedule = dict()
     for course in schedule:
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
     user_list.schedule = finalSchedule
     user_list.save()
-    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':genedList})
+    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':courseList})
 
 def convert_to_seconds(thisTime):
     afternoonFlag = False

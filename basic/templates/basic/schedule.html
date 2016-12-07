@@ -12,11 +12,16 @@
   {{thisClass}}
 </br>
 {% endfor %}
+<h1>Gen eds that can be scheduled </h1>
+{% for thisClass in geneds %}
+  {{thisClass.title }}{{thisClass.coursetime}} {{thisClass.days}}
+</br>
+{% endfor %}
 <h1>Courses that can be scheduled</h1>
 {% for thisCourse in coursesToSchedule %}
 <h2>Next section</h2>
 {% for thisInfo in thisCourse%}
-{{thisInfo.title}} {{thisInfo.coursetime}}
+{{thisInfo.title}} {{thisInfo.coursetime}} {{thisInfo.days}}
 </br>
 {% endfor %}
 {% endfor %}
