@@ -37,9 +37,6 @@ def progress(request):
         UpdatedFlightPlan = json.dumps(flightplan)
         #Update db for current user
         StudentInfo.objects.filter(userid=current_user.id).update(progress = UpdatedFlightPlan)
-
-        return render(request, "basic/basic.html")
-
     return render(request, "basic/progress.html", {'FlightPlan': flightplan, 'currentUser':current_user})
 
 def login(request):
@@ -115,18 +112,19 @@ def ProgressBar(request):
 def schedule(request):
     current_user = request.user
     #Get user info and preferences
-    user_list = StudentInfo.objects.filter(userid=current_user.id)[:1]
-    temp = user_list[0].progress
-    preferredHours = user_list[0].credithour
+    user_list = StudentInfo.objects.get(userid=current_user.id)
+    temp = user_list.progress
+    preferredHours = user_list.credithour
     flightplan = json.loads(temp)
     classList = []
     genedList = []
+    hoursList = []
     #collect courses still needed for graduation
     for semester in flightplan["semesters"]:
         for course in semester["classes"]:
             if(course['complete'] != True):
                 classList.append(course)
-            if(semester['id'] == "Gen Eds"):
+            if(semester['id'] == "Gen Eds" and course['complete'] != True):
                 genedList.append(course)
     #If co-op is next required course, only schedule the co-op. Otherwise ignore all co-ops
     if("Co-op" in classList[0]['course']):
@@ -163,13 +161,14 @@ def schedule(request):
                         courseScheduled = True
                         break
                     else:
+                        #append course to final schedule
                         schedule.append(thisCourse)
                         classHours = classHours + int(thisCourse.units)
                         courseScheduled = True
                         break
     #schedule gened if available
     genedFound = False
-    if(genedList and "CO-OP" not in schedule[0].title):
+    if(genedList and ("CO-OP" not in schedule[0].title)):
         schedule.pop()
         courseList = Course.objects.filter(genedflag = True)
         while(genedFound == False):
@@ -184,4 +183,10 @@ def schedule(request):
                             schedule.append(course)
                             genedFound = True
                             break
-    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':schedule})
+    finalSchedule = dict()
+    for course in schedule:
+        finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
+    finalSchedule = json.dumps(finalSchedule)
+    user_list.schedule = finalSchedule
+    user_list.save()
+    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':genedList})

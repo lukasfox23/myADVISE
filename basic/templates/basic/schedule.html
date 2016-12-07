@@ -1,14 +1,8 @@
 <h1> Oh, Hello there </h1>
 {% block content %}
-{% for course in test %}
-{{course.title}} {{course.req}}
-</br>
-{% endfor %}
 <h1>Final Schedule </h1>
-{% for course in schedule %}
-{{course.title}} {{course.coursetime}}
+{{schedule}}
 </br>
-{% endfor %}
 <h1>Courses to choose from</h1>
 {% for thisClass in neededCourses %}
   {{thisClass}}
