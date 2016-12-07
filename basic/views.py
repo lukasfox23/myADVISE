@@ -121,7 +121,7 @@ def profile(request):
             NewFlightPlanJson = FlightPlan.objects.get(major=NewMajor)
             StudentInfo.objects.filter(userid=current_user.id).update(progress=NewFlightPlanJson.content, major=NewMajor)
 
-            currentUser, major, progressTotal, flightplan = ProgressBar(request)
+            currentUser, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
 
             return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
