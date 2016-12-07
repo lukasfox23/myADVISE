@@ -171,7 +171,7 @@ def schedule(request):
     semesterCourses=[]
     #retrieve all possible classes for scheduling
     for thisClass in classList:
-        classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr'])
+        classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr']).exclude(coursetime = "")
         if(classObject):
             semesterCourses.append(classObject)
     #select final courses
@@ -241,14 +241,12 @@ def schedule(request):
     genedFound = False
     if(genedList and ("CO-OP" not in schedule[0].title)):
         schedule.pop()
-        courseList = Course.objects.filter(genedflag = True)
+        courseList = Course.objects.filter(genedflag = True).exclude(coursetime = "")
         while(genedFound == False):
             for gened in genedList:
                 if(genedFound == True):
                     break
                 for course in courseList:
-                    if not course.coursetime:
-                        break
                     courseName = course.title
                     if("-" in courseName):
                         req = courseName.split("-")
@@ -273,8 +271,10 @@ def schedule(request):
                                         daysOffered.append(2)
                                     elif day == 'F':
                                         daysOffered.append(4)
-
-                                a1, a2 = time_range_to_seconds(timeString[i])
+                                if(course.coursetime):
+                                    a1, a2 = time_range_to_seconds(timeString[i])
+                                else:
+                                    break
 
                                 for day in daysOffered:
                                     for timeRange in timeRangesT[day]:
