@@ -24,16 +24,28 @@
             <div class="jumbotron" style="min-height: 750px">
                 <h2>Current Schedule</h2>
                 <!--Displays a place holder if the user has not created a schedule yet -->
-                {% if currentUser.schedule == none %}
+                {% if major.schedule == none %}
 
                     <h4>You have no schedule, please generate one from the homepage.</h4>
                     <div class="text-center">
                         <h1 class="glyphicon glyphicon-calendar" style="font-size: 400px"></h1>
                     </div>
-                 <!--Displays the user schedule -->
-                {% else %}
 
-                    <h1>{{ currentUser.schedule }}</h1>
+                {% else %}
+                 <!--Displays the user schedule -->
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Stuff</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for thisCourse in Schedule %}
+                            <tr>
+                                <td>{{ thisCourse.subject }}</td>
+                            </tr>
+                            {% endfor %}
+                    </table>
 
                 {% endif %}
 

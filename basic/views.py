@@ -63,7 +63,7 @@ def create(request):
 @login_required(login_url='../login/')
 def profile(request):
 
-    current_user, major, progressTotal, flightplan = ProgressBar(request)
+    current_user, major, progressTotal, flightplan, Schedule = ProgressBar(request)
 
     # Action from Modals
     if request.method == "POST":
@@ -74,10 +74,10 @@ def profile(request):
         # If the user doesn't want to change their major
         if NewMajor is None:
             # Update Params Modal
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule})
         elif major.major == NewMajor:
             # User tried to update their major without changing their major, do nothing
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule})
         else:
             # Update Major
             NewFlightPlanJson = FlightPlan.objects.get(major=NewMajor)
@@ -85,9 +85,9 @@ def profile(request):
 
             currentUser, major, progressTotal, flightplan = ProgressBar(request)
 
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule})
 
-    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule})
 
 def ProgressBar(request):
     current_user = request.user
@@ -106,7 +106,11 @@ def ProgressBar(request):
     progressTotal = float(completeCount/totalCount) * 100
     progressTotal = round(progressTotal,2)
 
-    return current_user, major, progressTotal, flightplan
+    # Grabbing the schedule
+    EncodedSchedule = user_list[0].schedule
+    DecodedSchedule = json.loads(EncodedSchedule)
+
+    return current_user, major, progressTotal, flightplan, DecodedSchedule
 
 @login_required(login_url='../login/')
 def schedule(request):
