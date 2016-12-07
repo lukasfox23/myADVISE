@@ -318,7 +318,8 @@ def schedule(request):
     finalSchedule = json.dumps(finalSchedule)
     user_list.schedule = finalSchedule
     user_list.save()
-    return render(request, "basic/basic.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule})
+    current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
 def convert_to_seconds(thisTime):
     afternoonFlag = False
