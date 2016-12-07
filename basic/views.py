@@ -80,7 +80,7 @@ def create(request):
             if new_user:
                 auth_login(request, new_user)
                 userPlan = FlightPlan.objects.get(major=data['major'])
-                userInfo = StudentInfo(userid=new_user, major=data['major'],credithour = 15, graddate=datetime.now(), progress=userPlan.content, schedule='none')
+                userInfo = StudentInfo(userid=new_user, major=data['major'],credithour = 15, desiredhours = "Don't Care", graddate=datetime.now(), progress=userPlan.content, schedule='none')
                 userInfo.save()
             # redirect, or however you want to get to the main view
             return render(request, "basic/basic.html")
