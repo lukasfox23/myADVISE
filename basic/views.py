@@ -213,12 +213,55 @@ def schedule(request):
         classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr']).exclude(coursetime = "")
         if(classObject):
             semesterCourses.append(classObject)
+    
     #select final courses
     schedule = []
     timeRanges = [[] for i in range(5)]
     classHours = 0
     scheduleDone = False
     courseScheduled = False
+    
+    preferencesExhausted = False 
+    
+    if(preferredHours != "Don't Care"):
+        while(preferencesExhausted == False):
+            for courseSet in semesterCourses:
+                courseScheduled = False
+                finishedSet = False
+                while(courseScheduled == False and finishedSet == False):
+                    for thisCourse in courseSet:
+                        if(classHours + int(thisCourse.units) > preferredHours + 1):
+                            scheduleDone = True
+                            courseScheduled = True
+                            break
+                        else:
+                            timeRangesT = copy.deepcopy(timeRanges)
+                            timeString = course.coursetime.split(",")
+                            meetPref = True 
+                            for time in timeString:
+                                timeComponents = time.split(":")
+                                startHour = int(timeComponents[0])
+                                
+                                if(preferredHours == 'After Noon'):  
+                                    if(startHour < 12):
+                                        meetPref = False             
+                                else:
+                                    if(startHour > 12):
+                                        meetPref = False 
+                            
+                            if(meetPref == False):
+                                break
+                                    
+                            conflict=checkConflict(timeRangesT, thisCourse)
+                            if(conflict == False):
+                                timeRanges = timeRangesT
+                                schedule.append(thisCourse)
+                                classHours = classHours + int(thisCourse.units)
+                                courseScheduled = True
+                                break
+                    finishedSet = True
+            preferencesExhausted = True
+    
     while(scheduleDone == False):
         for courseSet in semesterCourses:
             courseScheduled = False
