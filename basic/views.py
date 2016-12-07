@@ -317,6 +317,7 @@ def schedule(request):
     user_list.schedule = finalSchedule
     user_list.save()
     current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
+    print classHours
     return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
 def convert_to_seconds(thisTime):
@@ -384,7 +385,6 @@ def checkConflict(timeRangesT, course):
         a1, a2 = time_range_to_seconds(timeString[i])
 
         for day in daysOffered:
-            print day
             for timeRange in timeRangesT[day]:
                 b1 = timeRange[0]
                 b2 = timeRange[1]
