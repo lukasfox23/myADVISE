@@ -1,5 +1,6 @@
 import json
 import time
+import copy
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 #import necessary models
@@ -24,7 +25,7 @@ def index(request):
 # Param request - Request to the progress page
 # Returns Progress page
 # This function returns the progress page for the current user, it will grab the current user's progress, which is determined by
-# by class courses included in a student's flightplan and pass that in to the progress page as the flightplan 
+# by class courses included in a student's flightplan and pass that in to the progress page as the flightplan
 # along with the current user, this will happen if the user is logged in.
 def progress(request):
     current_user = request.user
@@ -50,14 +51,14 @@ def progress(request):
 
 # Param request - Request to the login page
 # Returns login page
-# This function will return the Login page for the user to attempt to log in. 
+# This function will return the Login page for the user to attempt to log in.
 def login(request):
     return render(request, "basic/login.html")
 
 # Param request - Request to the create user page
 # Returns create user page
 # This function will return the create user page, the page will attempt to create the user if the credentials they provide are valid
-# if they are not it will return the same page otherwise return them to the main page. 
+# if they are not it will return the same page otherwise return them to the main page.
 def create(request):
     if request.method == "POST":
         form = UserForm(request.POST)
@@ -79,8 +80,8 @@ def create(request):
 @login_required(login_url='../login/')
 # Param request - Request to the profile page
 # Returns profile page
-# This function will return the profile page if the user is logged in, this will grab the major, progress, and flightplan of 
-# the current user to give to the profile page to display and or update. The user can use this page to add preferences to schedule 
+# This function will return the profile page if the user is logged in, this will grab the major, progress, and flightplan of
+# the current user to give to the profile page to display and or update. The user can use this page to add preferences to schedule
 # generation or change their major, also displays a progress bar for the courses completion
 def profile(request):
 
@@ -112,7 +113,7 @@ def profile(request):
 
 # Param request - Request to the progress action
 # Returns user information related to the user which is the current user, major, progress total, and flightplan of that user
-# This function will return everything for the profile page to use, also used 
+# This function will return everything for the profile page to use, also used
 # for the progress bar to display how close the user is to completion
 def ProgressBar(request):
     current_user = request.user
@@ -137,7 +138,7 @@ def ProgressBar(request):
 # Param request - Request to the schedule page
 # Returns schedule page
 # This function will return the schedule page if the user is logged in. It will grab everything it needs for the user and attempt
-# to create a schedule for the next semester of classes for that user based on their progress so far. 
+# to create a schedule for the next semester of classes for that user based on their progress so far.
 def schedule(request):
     current_user = request.user
     #Get user info and preferences
@@ -175,6 +176,7 @@ def schedule(request):
             semesterCourses.append(classObject)
     #select final courses
     schedule = []
+    timeRanges = [[] for i in range(5)]
     classHours = 0
     scheduleDone = False
     courseScheduled = False
@@ -190,6 +192,48 @@ def schedule(request):
                         courseScheduled = True
                         break
                     else:
+                        timeRangesT = copy.deepcopy(timeRanges)
+                        days = thisCourse.days
+                        days = days.split(",")
+                        timeString = thisCourse.coursetime.split(",")
+
+                        conflict = False
+                        for i in range(len(days)):
+                            daysOffered = []
+                            if('Th' in days[i]):
+                                daysOffered.append(3)
+                                days[i].replace("Th", "", 1)
+
+                            for day in days[i]:
+                                if day == 'M':
+                                    daysOffered.append(0)
+                                elif day == 'T':
+                                    daysOffered.append(1)
+                                elif day == 'W':
+                                    daysOffered.append(2)
+                                elif day == 'F':
+                                    daysOffered.append(4)
+
+                            a1, a2 = time_range_to_seconds(timeString[i])
+
+                            for day in daysOffered:
+                                for timeRange in timeRangesT[day]:
+                                    b1 = timeRange[0]
+                                    b2 = timeRange[1]
+                                    if(check_range_intersect(a1, a2, b1, b2) == True):
+                                        conflict = True
+
+                            if(conflict == False):
+                                timeRange = [a1, a2]
+                                for day in daysOffered:
+                                    timeRangesT[day].append(timeRange)
+                            else:
+                                break
+                        if(conflict == False):
+                            timeRanges = timeRangesT
+                            schedule.append(thisCourse)
+                            classHours = classHours + int(thisCourse.units)
+                            courseScheduled = True
                         #append course to final schedule
                         schedule.append(thisCourse)
                         classHours = classHours + int(thisCourse.units)
@@ -217,64 +261,40 @@ def schedule(request):
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
     user_list.schedule = finalSchedule
     user_list.save()
+    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':genedList})
 
-    timeSchedule= [[] for i in range(5)]
-    totalSeconds = []
-    redundantTimes = []
+def convert_to_seconds(thisTime):
     afternoonFlag = False
-    #make dictionaries for possible distinct times per class
-    for testCourse in schedule:
-        timeset = dict()
-        #Set the days of the course
-        days = testCourse.days
-        days = days.split(",")
-        #Find the time of the course
-        timeString = testCourse.coursetime.split(",")
-        for i in range(0,len(days)):
-            timeset[days[i]] = timeString[i]
-        for key,value in timeset.iteritems():
-            splitTime = value.split("-")
-            thisDay = key
-            classtimes = []
-            for thisTime in splitTime:
-                afternoonFlag = False
-                #adjust for pm if needed
-                if(thisTime and thisTime.endswith("pm")):
-                    afternoonFlag = True
-                #cut empty spaces and parsing errors
-                if(thisTime[0] == " "):
-                    thisTime = thisTime[1:6]
-                    if(thisTime.startswith("12")):
-                        afternoonFlag = False
-                else:
-                    thisTime = thisTime[0:5]
-                    if(thisTime.startswith("12")):
-                        afternoonFlag = False
-                x = time.strptime(thisTime,'%H:%M')
-                #if pm add extra seconds
-                thisTime = timedelta(hours=x.tm_hour,minutes=x.tm_min).total_seconds()
-                if(afternoonFlag):
-                    thisTime = thisTime + 43200
-                classtimes.append(thisTime)
-            totalSeconds.append(classtimes)
-            #test time slow of class to see if it conflicts with others
-            for currentTime in classtimes:
-                if(thisDay.startswith("T")):
-                    for currentDay in timeSchedule[1]:
-                        redundantTimes.append(currentDay)
-            #add time ranges to specific days if accepted
-            #Manage weird Thursday issue
-            if("Th" in thisDay):
-                thisDay.replace("Th", "", 1)
-                #place time in thursday index
-                timeSchedule[3].append(classtimes)
-            for c in thisDay:
-                if(c == "M"):
-                    timeSchedule[0].append(classtimes)
-                if(c == "T"):
-                    timeSchedule[1].append(classtimes)
-                if(c == "W"):
-                    timeSchedule[2].append(classtimes)
-                if(c == "F"):
-                    timeSchedule[4].append(classtimes)
-    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':genedList, 'totalSeconds': redundantTimes})
+    #adjust for pm if needed
+    if(thisTime and thisTime.endswith("pm")):
+        afternoonFlag = True
+    #cut empty spaces and parsing errors
+    if(thisTime[0] == " "):
+        thisTime = thisTime[1:6]
+        if(thisTime.startswith("12")):
+            afternoonFlag = False
+    else:
+        thisTime = thisTime[0:5]
+        if(thisTime.startswith("12")):
+            afternoonFlag = False
+    x = time.strptime(thisTime,'%H:%M')
+    #if pm add extra seconds
+    thisTime = timedelta(hours=x.tm_hour,minutes=x.tm_min).total_seconds()
+    if(afternoonFlag):
+        thisTime = thisTime + 43200
+    thisTime
+    return thisTime
+
+
+def time_range_to_seconds(time_str):
+	times = time_str.split('-')
+
+	a1 = convert_to_seconds(times[0])
+	a2 = convert_to_seconds(times[1])
+
+	return a1, a2
+
+def check_range_intersect(a1, a2, b1, b2):
+	if(a1 <= b2) and (a2 >= b1):
+		return True;
+	return False;
