@@ -104,6 +104,10 @@ def profile(request):
         DesiredHours = request.POST.get('DesiredHours')
         NewMajor = request.POST.get('NewMajor')
 
+        if CreditHours == "No Preference":
+            CreditHours = major.credithour
+            print(CreditHours)
+
         # If the user doesn't want to change their major
         if NewMajor is None:
             # Update Params Modal
