@@ -268,6 +268,7 @@ def schedule(request):
     finalSchedule = dict()
     for course in schedule:
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
+    finalSchedule = json.dumps(finalSchedule)
     user_list.schedule = finalSchedule
     user_list.save()
     return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule})
