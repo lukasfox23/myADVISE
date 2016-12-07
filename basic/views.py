@@ -375,6 +375,13 @@ def check_range_intersect(a1, a2, b1, b2):
 # checks if course times overlap
 # param timeRanges: stores current time ranges for scheduled courses
 # param course: course to be added
+# returns b		return True;
+	return False;
+
+####
+# checks if course times overlap
+# param timeRanges: stores current time ranges for scheduled courses
+# param course: course to be added
 # returns bool indicating conflict
 def checkConflict(timeRangesT, course):
     days = course.days
@@ -412,5 +419,4 @@ def checkConflict(timeRangesT, course):
                 timeRangesT[day].append(timeRange)
         else:
             break
-
     return conflict
