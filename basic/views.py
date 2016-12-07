@@ -1,4 +1,6 @@
 import json
+import time
+import copy
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 #import necessary models
@@ -8,7 +10,7 @@ from myADVISE.forms import UserForm
 #login view request is named login...renamed default django function for clairty
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import authenticate
-from datetime import datetime
+from datetime import datetime,timedelta
 from django.template import RequestContext
 # Create your views here.
 
@@ -212,6 +214,7 @@ def schedule(request):
             semesterCourses.append(classObject)
     #select final courses
     schedule = []
+    timeRanges = [[] for i in range(5)]
     classHours = 0
     scheduleDone = False
     courseScheduled = False
@@ -219,7 +222,8 @@ def schedule(request):
         for courseSet in semesterCourses:
             courseScheduled = False
             #loop through variations of courses until one is scheduled
-            while(courseScheduled == False):
+            finishedSet = False
+            while(courseScheduled == False and finishedSet == False):
                 for thisCourse in courseSet:
                     #Check if the preffered hours are greatly exceeded
                     if(classHours + int(thisCourse.units) > preferredHours + 1):
@@ -227,11 +231,50 @@ def schedule(request):
                         courseScheduled = True
                         break
                     else:
-                        #append course to final schedule
-                        schedule.append(thisCourse)
-                        classHours = classHours + int(thisCourse.units)
-                        courseScheduled = True
-                        break
+                        timeRangesT = copy.deepcopy(timeRanges)
+                        days = thisCourse.days
+                        days = days.split(",")
+                        timeString = thisCourse.coursetime.split(",")
+
+                        conflict = False
+                        for i in range(len(days)):
+                            daysOffered = []
+                            if('Th' in days[i]):
+                                daysOffered.append(3)
+                                days[i].replace("Th", "", 1)
+
+                            for day in days[i]:
+                                if day == 'M':
+                                    daysOffered.append(0)
+                                elif day == 'T':
+                                    daysOffered.append(1)
+                                elif day == 'W':
+                                    daysOffered.append(2)
+                                elif day == 'F':
+                                    daysOffered.append(4)
+
+                            a1, a2 = time_range_to_seconds(timeString[i])
+
+                            for day in daysOffered:
+                                for timeRange in timeRangesT[day]:
+                                    b1 = timeRange[0]
+                                    b2 = timeRange[1]
+                                    if(check_range_intersect(a1, a2, b1, b2) == True):
+                                        conflict = True
+
+                            if(conflict == False):
+                                timeRange = [a1, a2]
+                                for day in daysOffered:
+                                    timeRangesT[day].append(timeRange)
+                            else:
+                                break
+                        if(conflict == False):
+                            timeRanges = timeRangesT
+                            schedule.append(thisCourse)
+                            classHours = classHours + int(thisCourse.units)
+                            courseScheduled = True
+                            break
+                    finishedSet = True
     #schedule gened if available
     genedFound = False
     if(genedList and ("CO-OP" not in schedule[0].title)):
@@ -242,17 +285,94 @@ def schedule(request):
                 if(genedFound == True):
                     break
                 for course in courseList:
+                    if not course.coursetime:
+                        break
                     courseName = course.title
                     if("-" in courseName):
                         req = courseName.split("-")
                         if(gened['subject'] == req[1]):
-                            schedule.append(course)
-                            genedFound = True
-                            break
+                            timeRangesT = copy.deepcopy(timeRanges)
+                            days = course.days
+                            days = days.split(",")
+                            timeString = course.coursetime.split(",")
+                            conflict = False
+                            for i in range(len(days)):
+                                daysOffered = []
+                                if('Th' in days[i]):
+                                    daysOffered.append(3)
+                                    days[i].replace("Th", "", 1)
+
+                                for day in days[i]:
+                                    if day == 'M':
+                                        daysOffered.append(0)
+                                    elif day == 'T':
+                                        daysOffered.append(1)
+                                    elif day == 'W':
+                                        daysOffered.append(2)
+                                    elif day == 'F':
+                                        daysOffered.append(4)
+
+                                a1, a2 = time_range_to_seconds(timeString[i])
+
+                                for day in daysOffered:
+                                    for timeRange in timeRangesT[day]:
+                                        b1 = timeRange[0]
+                                        b2 = timeRange[1]
+                                        if(check_range_intersect(a1, a2, b1, b2) == True):
+                                            conflict = True
+
+                                if(conflict == False):
+                                    timeRange = [a1, a2]
+                                    for day in daysOffered:
+                                        timeRangesT[day].append(timeRange)
+                                else:
+                                    break
+                            if(conflict == False):
+                                timeRanges = timeRangesT
+                                schedule.append(course)
+                                genedFound = True
+                                courseScheduled = True
+                                break
+                genedFound = True
     finalSchedule = dict()
     for course in schedule:
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
-    finalSchedule = json.dumps(finalSchedule)
     user_list.schedule = finalSchedule
     user_list.save()
-    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':genedList})
+    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':courseList})
+
+def convert_to_seconds(thisTime):
+    afternoonFlag = False
+    #adjust for pm if needed
+    if(thisTime and thisTime.endswith("pm")):
+        afternoonFlag = True
+    #cut empty spaces and parsing errors
+    if(thisTime[0] == " "):
+        thisTime = thisTime[1:6]
+        if(thisTime.startswith("12")):
+            afternoonFlag = False
+    else:
+        thisTime = thisTime[0:5]
+        if(thisTime.startswith("12")):
+            afternoonFlag = False
+    x = time.strptime(thisTime,'%H:%M')
+    #if pm add extra seconds
+    thisTime = timedelta(hours=x.tm_hour,minutes=x.tm_min).total_seconds()
+    if(afternoonFlag):
+        thisTime = thisTime + 43200
+    thisTime
+    return thisTime
+
+
+def time_range_to_seconds(time_str):
+	times = time_str.split('-')
+
+	a1 = convert_to_seconds(times[0])
+	a2 = convert_to_seconds(times[1])
+
+	return a1, a2
+
+def check_range_intersect(a1, a2, b1, b2):
+	if(a1 <= b2) and (a2 >= b1):
+		return True;
+	return False;
