@@ -236,22 +236,27 @@ def schedule(request):
     courseScheduled = False
 
     preferencesExhausted = False
-
+    # check if time preference
     if(desiredHours != "Don't Care"):
+        # continue until all classes check
         while(preferencesExhausted == False):
             for courseSet in semesterCourses:
                 courseScheduled = False
                 finishedSet = False
+                # continue until course set finished or course found
                 while(courseScheduled == False and finishedSet == False):
                     for thisCourse in courseSet:
+                        # check if adding this course would break hours pref
                         if(classHours + int(thisCourse.units) > preferredHours + 1):
-                            scheduleDone = True
+                            #scheduleDone = True
                             courseScheduled = True
                             break
                         else:
                             timeRangesT = copy.deepcopy(timeRanges)
                             timeString = thisCourse.coursetime.split(",")
                             meetPref = True
+
+                            # verify time meets preference
                             for time in timeString:
                                 splitTimes = time.split('-')
                                 if(desiredHours == 'After Noon'):
@@ -261,9 +266,11 @@ def schedule(request):
                                     if 'pm' in splitTimes[0]:
                                         meetPref = False
 
+                            # exit if preference notmet
                             if(meetPref == False):
                                 break
 
+                            # check if course conflicts
                             conflict=checkConflict(timeRangesT, thisCourse)
                             if(conflict == False):
                                 timeRanges = timeRangesT
@@ -274,6 +281,7 @@ def schedule(request):
                     finishedSet = True
             preferencesExhausted = True
 
+    # perform similar algorithm without preferneces
     while(scheduleDone == False):
         for courseSet in semesterCourses:
             courseScheduled = False
@@ -283,7 +291,7 @@ def schedule(request):
                 for thisCourse in courseSet:
                     #Check if the preffered hours are greatly exceeded
                     if((classHours + int(thisCourse.units))> (preferredHours + 1)):
-                        scheduleDone = True
+                        #scheduleDone = True
                         courseScheduled = True
                         break
                     else:
@@ -301,10 +309,16 @@ def schedule(request):
     genedFound = False
 
     isCoop = False
+
+    # check if co-op
     if('SEMINAR' not in schedule[0].title):
         if("CO-OP" in schedule[0].title):
             isCoop = True
+    # if gened available and not co-op, find gened
+    # schedule gened using similar algorithm
+    # replace one course with a gened
     if(genedList and isCoop is False):
+        schedule.pop()
         courseList = Course.objects.filter(genedflag = True).exclude(coursetime = "")
         while(genedFound == False):
             for gened in genedList:
