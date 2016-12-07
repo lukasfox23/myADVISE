@@ -1,18 +1,27 @@
 <h1> Oh, Hello there </h1>
 {% block content %}
+{{totalSeconds}}
 <h1>Final Schedule </h1>
-{{schedule}}
-</br>
+{% for dictionary,value in schedule.items %}
+  {{value}}
+  </br>
+  {% endfor %}
+
 <h1>Courses to choose from</h1>
 {% for thisClass in neededCourses %}
   {{thisClass}}
+</br>
+{% endfor %}
+<h1>Gen eds that can be scheduled </h1>
+{% for thisClass in geneds %}
+  {{thisClass.title }}{{thisClass.coursetime}} {{thisClass.days}}
 </br>
 {% endfor %}
 <h1>Courses that can be scheduled</h1>
 {% for thisCourse in coursesToSchedule %}
 <h2>Next section</h2>
 {% for thisInfo in thisCourse%}
-{{thisInfo.title}} {{thisInfo.coursetime}}
+{{thisInfo.title}} {{thisInfo.coursetime}} {{thisInfo.days}}
 </br>
 {% endfor %}
 {% endfor %}

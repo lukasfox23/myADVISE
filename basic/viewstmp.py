@@ -37,17 +37,6 @@ def progress(request):
     #Get coursenames of checks, iterate through flightplan, mark as complete when match
     if request.method == "POST":
         Complete = request.POST.getlist('check')
-
-        for semester in flightplan['semesters']:
-            for classes in semester['classes']:
-                if(classes['complete'] == True):
-                    stillTrue = False
-                    for index in range(len(Complete)):
-                        if Complete[index] == classes['course']:
-                            stillTrue = True
-                            break
-                    classes['complete'] = stillTrue
-
         for semester in flightplan['semesters']:
             for classes in semester['classes']:
                 for index in range(len(Complete)):
@@ -80,7 +69,7 @@ def create(request):
             if new_user:
                 auth_login(request, new_user)
                 userPlan = FlightPlan.objects.get(major=data['major'])
-                userInfo = StudentInfo(userid=new_user, major=data['major'],credithour = 15, desiredhours = "Don't Care", graddate=datetime.now(), progress=userPlan.content, schedule='none')
+                userInfo = StudentInfo(userid=new_user, major=data['major'],credithour = 15, graddate=datetime.now(), progress=userPlan.content, schedule='none')
                 userInfo.save()
             # redirect, or however you want to get to the main view
             return render(request, "basic/basic.html")
@@ -96,22 +85,21 @@ def create(request):
 # generation or change their major, also displays a progress bar for the courses completion
 def profile(request):
 
-    current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
+    current_user, major, progressTotal, flightplan = ProgressBar(request)
 
     # Action from Modals
     if request.method == "POST":
         CreditHours = request.POST.get('CreditHours')
-        DesiredHours = request.POST.get('DesiredHours')
+        DesiredHours = request.POST.getlist('DesiredHours')
         NewMajor = request.POST.get('NewMajor')
 
         # If the user doesn't want to change their major
         if NewMajor is None:
             # Update Params Modal
-            StudentInfo.objects.filter(userid=current_user.id).update(desiredhours=DesiredHours, credithour=CreditHours)
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
         elif major.major == NewMajor:
             # User tried to update their major without changing their major, do nothing
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
         else:
             # Update Major
             NewFlightPlanJson = FlightPlan.objects.get(major=NewMajor)
@@ -119,9 +107,9 @@ def profile(request):
 
             currentUser, major, progressTotal, flightplan = ProgressBar(request)
 
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
 
-    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
 
 # Param request - Request to the progress action
 # Returns user information related to the user which is the current user, major, progress total, and flightplan of that user
@@ -144,33 +132,7 @@ def ProgressBar(request):
     progressTotal = float(completeCount/totalCount) * 100
     progressTotal = round(progressTotal,2)
 
-    # Grabbing the schedule
-    EncodedSchedule = user_list[0].schedule
-    DecodedSchedule = json.loads(EncodedSchedule)
-
-    # Get Times/Dates
-    CourseName = ''
-    CourseDict = {}
-    TimeDict = {}
-
-    # Create a coursename, date, time dict from schedule
-    for key,value in DecodedSchedule.items():
-        Time = value['coursetime'].split(',')
-        TempDays = value['days'].split(',')
-
-        # Replace Th with H
-        for index in range(len(TempDays)):
-            TempDays[index].upper()
-            TempDays[index] = TempDays[index].replace("Th", "Z")
-            TempDays[index] = TempDays[index].replace("TH", "Z")
-
-        # Finish up dict
-        Days = TempDays
-        CourseName = value['subject'] + ' ' + value['coursecode']
-        TimeDict = dict(zip(Days, Time))
-        CourseDict[CourseName] = TimeDict
-
-    return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
+    return current_user, major, progressTotal, flightplan
 
 @login_required(login_url='../login/')
 # Param request - Request to the schedule page
@@ -183,7 +145,6 @@ def schedule(request):
     user_list = StudentInfo.objects.get(userid=current_user.id)
     temp = user_list.progress
     preferredHours = user_list.credithour
-    desiredHours = user_list.desiredhours
     flightplan = json.loads(temp)
     classList = []
     genedList = []
@@ -196,7 +157,7 @@ def schedule(request):
             if(semester['id'] == "Gen Eds" and course['complete'] != True):
                 genedList.append(course)
     #If co-op is next required course, only schedule the co-op. Otherwise ignore all co-ops
-    if("Co-op" in classList[0]['course'] and "Seminar" not in classList[0]['course']):
+    if("Co-op" in classList[0]['course']):
         temp = classList[0]
         classList = []
         classList.append(temp)
@@ -205,63 +166,20 @@ def schedule(request):
         preferredHours = 0
     else:
         for thisClass in classList:
-            if("Co-op" in thisClass['course'] and "Seminar" not in classList[0]['course'] ):
+            if("Co-op" in thisClass['course']):
                 classList.remove(thisClass)
     semesterCourses=[]
     #retrieve all possible classes for scheduling
     for thisClass in classList:
-        classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr']).exclude(coursetime = "")
+        classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr'])
         if(classObject):
             semesterCourses.append(classObject)
-    
     #select final courses
     schedule = []
     timeRanges = [[] for i in range(5)]
     classHours = 0
     scheduleDone = False
     courseScheduled = False
-    
-    preferencesExhausted = False 
-    
-    if(preferredHours != "Don't Care"):
-        while(preferencesExhausted == False):
-            for courseSet in semesterCourses:
-                courseScheduled = False
-                finishedSet = False
-                while(courseScheduled == False and finishedSet == False):
-                    for thisCourse in courseSet:
-                        if(classHours + int(thisCourse.units) > preferredHours + 1):
-                            scheduleDone = True
-                            courseScheduled = True
-                            break
-                        else:
-                            timeRangesT = copy.deepcopy(timeRanges)
-                            timeString = course.coursetime.split(",")
-                            meetPref = True 
-                            for time in timeString:
-                                timeComponents = time.split(":")
-                                startHour = int(timeComponents[0])
-                                
-                                if(preferredHours == 'After Noon'):  
-                                    if(startHour < 12):
-                                        meetPref = False             
-                                else:
-                                    if(startHour > 12):
-                                        meetPref = False 
-                            
-                            if(meetPref == False):
-                                break
-                                    
-                            conflict=checkConflict(timeRangesT, thisCourse)
-                            if(conflict == False):
-                                timeRanges = timeRangesT
-                                schedule.append(thisCourse)
-                                classHours = classHours + int(thisCourse.units)
-                                courseScheduled = True
-                                break
-                    finishedSet = True
-            preferencesExhausted = True
-    
     while(scheduleDone == False):
         for courseSet in semesterCourses:
             courseScheduled = False
@@ -276,31 +194,34 @@ def schedule(request):
                         break
                     else:
                         timeRangesT = copy.deepcopy(timeRanges)
-                        conflict=checkConflict(timeRangesT, thisCourse)
+                        conflict = checkConflict(timeRangesT, thisCourse)
+                        
                         if(conflict == False):
                             timeRanges = timeRangesT
                             schedule.append(thisCourse)
                             classHours = classHours + int(thisCourse.units)
                             courseScheduled = True
                             break
-                finishedSet = True
-        scheduleDone = True
+                            
+                    finishedSet = True
     #schedule gened if available
     genedFound = False
     if(genedList and ("CO-OP" not in schedule[0].title)):
         schedule.pop()
-        courseList = Course.objects.filter(genedflag = True).exclude(coursetime = "")
+        courseList = Course.objects.filter(genedflag = True)
         while(genedFound == False):
             for gened in genedList:
                 if(genedFound == True):
                     break
                 for course in courseList:
+                    if not course.coursetime:
+                        break
                     courseName = course.title
                     if("-" in courseName):
                         req = courseName.split("-")
                         if(gened['subject'] == req[1]):
                             timeRangesT = copy.deepcopy(timeRanges)
-                            conflict=checkConflict(timeRangesT, course)
+                            conflict = checkConflict(timeRangesT, conflict)
                             if(conflict == False):
                                 timeRanges = timeRangesT
                                 schedule.append(course)
@@ -313,7 +234,7 @@ def schedule(request):
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
     user_list.schedule = finalSchedule
     user_list.save()
-    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule})
+    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':courseList})
 
 def convert_to_seconds(thisTime):
     afternoonFlag = False
@@ -356,7 +277,7 @@ def check_range_intersect(a1, a2, b1, b2):
 # param timeRanges: stores current time ranges for scheduled courses
 # param course: course to be added
 # returns bool indicating conflict
-def checkConflict(timeRangesT, course):
+def checkConflict(timeRanges, course):
     days = course.days
     days = days.split(",")
     timeString = course.coursetime.split(",")
@@ -392,5 +313,6 @@ def checkConflict(timeRangesT, course):
                 timeRangesT[day].append(timeRange)
         else:
             break
-
-    return conflict
+    
+    return conflict 
+    
