@@ -1,8 +1,12 @@
 <h1> Oh, Hello there </h1>
 {% block content %}
+{{totalSeconds}}
 <h1>Final Schedule </h1>
-{{schedule}}
-</br>
+{% for dictionary,value in schedule.items %}
+  {{value}}
+  </br>
+  {% endfor %}
+
 <h1>Courses to choose from</h1>
 {% for thisClass in neededCourses %}
   {{thisClass}}

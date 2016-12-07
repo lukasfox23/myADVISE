@@ -1,4 +1,5 @@
 import json
+import time
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 #import necessary models
@@ -8,7 +9,7 @@ from myADVISE.forms import UserForm
 #login view request is named login...renamed default django function for clairty
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import authenticate
-from datetime import datetime
+from datetime import datetime,timedelta
 from django.template import RequestContext
 # Create your views here.
 
@@ -186,7 +187,66 @@ def schedule(request):
     finalSchedule = dict()
     for course in schedule:
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
-    finalSchedule = json.dumps(finalSchedule)
     user_list.schedule = finalSchedule
     user_list.save()
-    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':genedList})
+
+    timeSchedule= [[] for i in range(5)]
+    totalSeconds = []
+    redundantTimes = []
+    afternoonFlag = False
+    #make dictionaries for possible distinct times per class
+    for testCourse in schedule:
+        timeset = dict()
+        #Set the days of the course
+        days = testCourse.days
+        days = days.split(",")
+        #Find the time of the course
+        timeString = testCourse.coursetime.split(",")
+        for i in range(0,len(days)):
+            timeset[days[i]] = timeString[i]
+        for key,value in timeset.iteritems():
+            splitTime = value.split("-")
+            thisDay = key
+            classtimes = []
+            for thisTime in splitTime:
+                afternoonFlag = False
+                #adjust for pm if needed
+                if(thisTime and thisTime.endswith("pm")):
+                    afternoonFlag = True
+                #cut empty spaces and parsing errors
+                if(thisTime[0] == " "):
+                    thisTime = thisTime[1:6]
+                    if(thisTime.startswith("12")):
+                        afternoonFlag = False
+                else:
+                    thisTime = thisTime[0:5]
+                    if(thisTime.startswith("12")):
+                        afternoonFlag = False
+                x = time.strptime(thisTime,'%H:%M')
+                #if pm add extra seconds
+                thisTime = timedelta(hours=x.tm_hour,minutes=x.tm_min).total_seconds()
+                if(afternoonFlag):
+                    thisTime = thisTime + 43200
+                classtimes.append(thisTime)
+            totalSeconds.append(classtimes)
+            #test time slow of class to see if it conflicts with others
+            for currentTime in classtimes:
+                if(thisDay.startswith("T")):
+                    for currentDay in timeSchedule[1]:
+                        redundantTimes.append(currentDay)
+            #add time ranges to specific days if accepted
+            #Manage weird Thursday issue
+            if("Th" in thisDay):
+                thisDay.replace("Th", "", 1)
+                #place time in thursday index
+                timeSchedule[3].append(classtimes)
+            for c in thisDay:
+                if(c == "M"):
+                    timeSchedule[0].append(classtimes)
+                if(c == "T"):
+                    timeSchedule[1].append(classtimes)
+                if(c == "W"):
+                    timeSchedule[2].append(classtimes)
+                if(c == "F"):
+                    timeSchedule[4].append(classtimes)
+    return render(request, "basic/schedule.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule, 'geneds':genedList, 'totalSeconds': redundantTimes})
