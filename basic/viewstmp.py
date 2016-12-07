@@ -37,17 +37,6 @@ def progress(request):
     #Get coursenames of checks, iterate through flightplan, mark as complete when match
     if request.method == "POST":
         Complete = request.POST.getlist('check')
-
-        for semester in flightplan['semesters']:
-            for classes in semester['classes']:
-                if(classes['complete'] == True):
-                    stillTrue = False
-                    for index in range(len(Complete)):
-                        if Complete[index] == classes['course']:
-                            stillTrue = True
-                            break
-                    classes['complete'] = stillTrue
-
         for semester in flightplan['semesters']:
             for classes in semester['classes']:
                 for index in range(len(Complete)):
@@ -96,22 +85,21 @@ def create(request):
 # generation or change their major, also displays a progress bar for the courses completion
 def profile(request):
 
-    current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
+    current_user, major, progressTotal, flightplan = ProgressBar(request)
 
     # Action from Modals
     if request.method == "POST":
         CreditHours = request.POST.get('CreditHours')
-        DesiredHours = request.POST.get('DesiredHours')
+        DesiredHours = request.POST.getlist('DesiredHours')
         NewMajor = request.POST.get('NewMajor')
 
         # If the user doesn't want to change their major
         if NewMajor is None:
             # Update Params Modal
-            # StudentInfo.objects.filter(userid=current_user.id).update(desiredHours=DesiredHours, credithour=CreditHours)
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
         elif major.major == NewMajor:
             # User tried to update their major without changing their major, do nothing
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
         else:
             # Update Major
             NewFlightPlanJson = FlightPlan.objects.get(major=NewMajor)
@@ -119,9 +107,9 @@ def profile(request):
 
             currentUser, major, progressTotal, flightplan = ProgressBar(request)
 
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
 
-    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan})
 
 # Param request - Request to the progress action
 # Returns user information related to the user which is the current user, major, progress total, and flightplan of that user
@@ -144,33 +132,7 @@ def ProgressBar(request):
     progressTotal = float(completeCount/totalCount) * 100
     progressTotal = round(progressTotal,2)
 
-    # Grabbing the schedule
-    EncodedSchedule = user_list[0].schedule
-    DecodedSchedule = json.loads(EncodedSchedule)
-
-    # Get Times/Dates
-    CourseName = ''
-    CourseDict = {}
-    TimeDict = {}
-
-    # Create a coursename, date, time dict from schedule
-    for key,value in DecodedSchedule.items():
-        Time = value['coursetime'].split(',')
-        TempDays = value['days'].split(',')
-
-        # Replace Th with H
-        for index in range(len(TempDays)):
-            TempDays[index].upper()
-            TempDays[index] = TempDays[index].replace("Th", "Z")
-            TempDays[index] = TempDays[index].replace("TH", "Z")
-
-        # Finish up dict
-        Days = TempDays
-        CourseName = value['subject'] + ' ' + value['coursecode']
-        TimeDict = dict(zip(Days, Time))
-        CourseDict[CourseName] = TimeDict
-
-    return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
+    return current_user, major, progressTotal, flightplan
 
 @login_required(login_url='../login/')
 # Param request - Request to the schedule page
@@ -209,7 +171,7 @@ def schedule(request):
     semesterCourses=[]
     #retrieve all possible classes for scheduling
     for thisClass in classList:
-        classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr']).exclude(coursetime = "")
+        classObject = Course.objects.filter(subject = thisClass['subject'], coursecode=thisClass['nbr'])
         if(classObject):
             semesterCourses.append(classObject)
     #select final courses
@@ -232,101 +194,34 @@ def schedule(request):
                         break
                     else:
                         timeRangesT = copy.deepcopy(timeRanges)
-                        days = thisCourse.days
-                        days = days.split(",")
-                        timeString = thisCourse.coursetime.split(",")
-
-                        conflict = False
-                        for i in range(len(days)):
-                            daysOffered = []
-                            if('Th' in days[i]):
-                                daysOffered.append(3)
-                                days[i].replace("Th", "", 1)
-
-                            for day in days[i]:
-                                if day == 'M':
-                                    daysOffered.append(0)
-                                elif day == 'T':
-                                    daysOffered.append(1)
-                                elif day == 'W':
-                                    daysOffered.append(2)
-                                elif day == 'F':
-                                    daysOffered.append(4)
-
-                            a1, a2 = time_range_to_seconds(timeString[i])
-
-                            for day in daysOffered:
-                                for timeRange in timeRangesT[day]:
-                                    b1 = timeRange[0]
-                                    b2 = timeRange[1]
-                                    if(check_range_intersect(a1, a2, b1, b2) == True):
-                                        conflict = True
-
-                            if(conflict == False):
-                                timeRange = [a1, a2]
-                                for day in daysOffered:
-                                    timeRangesT[day].append(timeRange)
-                            else:
-                                break
+                        conflict = checkConflict(timeRangesT, thisCourse)
+                        
                         if(conflict == False):
                             timeRanges = timeRangesT
                             schedule.append(thisCourse)
                             classHours = classHours + int(thisCourse.units)
                             courseScheduled = True
                             break
+                            
                     finishedSet = True
     #schedule gened if available
     genedFound = False
     if(genedList and ("CO-OP" not in schedule[0].title)):
         schedule.pop()
-        courseList = Course.objects.filter(genedflag = True).exclude(coursetime = "")
+        courseList = Course.objects.filter(genedflag = True)
         while(genedFound == False):
             for gened in genedList:
                 if(genedFound == True):
                     break
                 for course in courseList:
+                    if not course.coursetime:
+                        break
                     courseName = course.title
                     if("-" in courseName):
                         req = courseName.split("-")
                         if(gened['subject'] == req[1]):
                             timeRangesT = copy.deepcopy(timeRanges)
-                            days = course.days
-                            days = days.split(",")
-                            timeString = course.coursetime.split(",")
-                            conflict = False
-                            for i in range(len(days)):
-                                daysOffered = []
-                                if('Th' in days[i]):
-                                    daysOffered.append(3)
-                                    days[i].replace("Th", "", 1)
-
-                                for day in days[i]:
-                                    if day == 'M':
-                                        daysOffered.append(0)
-                                    elif day == 'T':
-                                        daysOffered.append(1)
-                                    elif day == 'W':
-                                        daysOffered.append(2)
-                                    elif day == 'F':
-                                        daysOffered.append(4)
-                                if(course.coursetime):
-                                    a1, a2 = time_range_to_seconds(timeString[i])
-                                else:
-                                    break
-
-                                for day in daysOffered:
-                                    for timeRange in timeRangesT[day]:
-                                        b1 = timeRange[0]
-                                        b2 = timeRange[1]
-                                        if(check_range_intersect(a1, a2, b1, b2) == True):
-                                            conflict = True
-
-                                if(conflict == False):
-                                    timeRange = [a1, a2]
-                                    for day in daysOffered:
-                                        timeRangesT[day].append(timeRange)
-                                else:
-                                    break
+                            conflict = checkConflict(timeRangesT, conflict)
                             if(conflict == False):
                                 timeRanges = timeRangesT
                                 schedule.append(course)
@@ -376,3 +271,48 @@ def check_range_intersect(a1, a2, b1, b2):
 	if(a1 <= b2) and (a2 >= b1):
 		return True;
 	return False;
+
+####
+# checks if course times overlap
+# param timeRanges: stores current time ranges for scheduled courses
+# param course: course to be added
+# returns bool indicating conflict
+def checkConflict(timeRanges, course):
+    days = course.days
+    days = days.split(",")
+    timeString = course.coursetime.split(",")
+    conflict = False
+    for i in range(len(days)):
+        daysOffered = []
+        if('Th' in days[i]):
+            daysOffered.append(3)
+            days[i].replace("Th", "", 1)
+
+        for day in days[i]:
+            if day == 'M':
+                daysOffered.append(0)
+            elif day == 'T':
+                daysOffered.append(1)
+            elif day == 'W':
+                daysOffered.append(2)
+            elif day == 'F':
+                daysOffered.append(4)
+
+        a1, a2 = time_range_to_seconds(timeString[i])
+
+        for day in daysOffered:
+            for timeRange in timeRangesT[day]:
+                b1 = timeRange[0]
+                b2 = timeRange[1]
+                if(check_range_intersect(a1, a2, b1, b2) == True):
+                    conflict = True
+
+        if(conflict == False):
+            timeRange = [a1, a2]
+            for day in daysOffered:
+                timeRangesT[day].append(timeRange)
+        else:
+            break
+    
+    return conflict 
+    
