@@ -7,10 +7,24 @@
             <div class="jumbotron" style="min-height: 750px">
                 <h2>{{ currentUser.username }}</h2>
                 <h4>Major: {{ major.major }}</h4>
-
-                <h4>Course: </h4>
-                <h4>Instructor: </h4>
-                <div class="text-center" style="padding-top: 50px">
+                <!-- Display a scrollable text field representing schedule -->
+                <div class="well well-sm pre-scrollable">
+                {% for key, CourseName in CourseDict.items %}
+                <h5>{{ key }}</h5>
+                {% for Day, Hour in CourseName.items %}
+                <h5>{% if Day == 'H'%}
+                    Th: {{ Hour }}
+                    {% elif Day == 'TH' %}
+                    TTh: {{ Hour }}
+                    {% else %}
+                    {{ Day }}: {{ Hour }}
+                    {% endif %}
+                </h5>
+                {% endfor%}
+                {% endfor %}
+                </div>
+                <!-- Options to edit account info -->
+                <div class="text-center" style="padding-top: 80px">
                     <button class="btn btn-register btn-block" data-toggle="modal" data-target="#editModal">Edit Info</button>
                 </div>
                 <div class="text-center" style="padding-top: 20px">
@@ -36,14 +50,34 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th>Stuff</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for thisCourse in Schedule %}
+                            {% for key, CourseName in CourseDict.items %}
+                            {% for Day, Hour in CourseName.items%}
                             <tr>
-                                <td>{{ thisCourse.subject }}</td>
+                                <td>
+                                    {% if 'M' in Day %}{{ key }}{% endif %}
+                                </td>
+                                <td>
+                                    {% if 'T' in Day %}{{ key }}{% endif %}
+                                </td>
+                                <td>
+                                    {% if 'W' in Day %}{{ key }}{% endif %}
+                                </td>
+                                <td>
+                                    {% if 'Z' in Day %}{{ key }}{% endif %}
+                                </td>
+                                <td>
+                                    {% if 'F' in Day %}{{ key }}{% endif %}
+                                </td>
                             </tr>
+                            {% endfor %}
                             {% endfor %}
                     </table>
 
@@ -74,6 +108,7 @@
             <div class="modal-body">
                 <form class="form-horizontal" action="/profile/" method="post" role="form">
                     {% csrf_token %}
+                    <!-- Allow the user to choose their desired credit hours -->
                     <div class="form-group">
                         <label class="control-label col-sm-4" for="CreditHours">Desired Credit Hours (12-18): </label>
                         <div class="col-sm-8">
@@ -89,7 +124,20 @@
                         </div>
                     </div>
 
+                    <!-- Allow the user to choose their desired time-frame for scheduling -->
                     <div class="form-group">
+                        <label class="control-label col-sm-4" for="DesiredHours">Desired Hours: </label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="DesiredHours" name="DesiredHours">
+                                <option>Don't Care</option>
+                                <option>Before Noon</option>
+                                <option>After Noon</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- No time for time preferences -->
+                    <!--<div class="form-group">
                         <label class="control-label col-sm-4" for="DesiredHours">Desired Hours: </label>
                         <div class="col-sm-8">
                             <select multiple class="form-control" id="DesiredHours" name="DesiredHours">
@@ -108,7 +156,7 @@
                                 <option>8:00 PM</option>
                             </select>
                         </div>
-                    </div>
+                    </div>-->
 
                     <button type="submit" name="EditSubmit" id="EditSubmit" class="btn btn-success">Apply Changes</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -131,6 +179,7 @@
 
                     <div class="form-group">
                     {% csrf_token %}
+                    <!-- Allow user to choose their new desired major -->
                         <label class="control-label col-sm-4" for="DesiredHours">New Major: </label>
                         <div class="col-sm-8">
                             <select class="form-control" id="NewMajor" name="NewMajor">

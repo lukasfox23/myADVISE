@@ -23,7 +23,7 @@ def index(request):
 # Param request - Request to the progress page
 # Returns Progress page
 # This function returns the progress page for the current user, it will grab the current user's progress, which is determined by
-# by class courses included in a student's flightplan and pass that in to the progress page as the flightplan 
+# by class courses included in a student's flightplan and pass that in to the progress page as the flightplan
 # along with the current user, this will happen if the user is logged in.
 def progress(request):
     current_user = request.user
@@ -35,6 +35,17 @@ def progress(request):
     #Get coursenames of checks, iterate through flightplan, mark as complete when match
     if request.method == "POST":
         Complete = request.POST.getlist('check')
+
+        for semester in flightplan['semesters']:
+            for classes in semester['classes']:
+                if(classes['complete'] == True):
+                    stillTrue = False
+                    for index in range(len(Complete)):
+                        if Complete[index] == classes['course']:
+                            stillTrue = True
+                            break
+                    classes['complete'] = stillTrue
+
         for semester in flightplan['semesters']:
             for classes in semester['classes']:
                 for index in range(len(Complete)):
@@ -49,14 +60,14 @@ def progress(request):
 
 # Param request - Request to the login page
 # Returns login page
-# This function will return the Login page for the user to attempt to log in. 
+# This function will return the Login page for the user to attempt to log in.
 def login(request):
     return render(request, "basic/login.html")
 
 # Param request - Request to the create user page
 # Returns create user page
 # This function will return the create user page, the page will attempt to create the user if the credentials they provide are valid
-# if they are not it will return the same page otherwise return them to the main page. 
+# if they are not it will return the same page otherwise return them to the main page.
 def create(request):
     if request.method == "POST":
         form = UserForm(request.POST)
@@ -78,26 +89,27 @@ def create(request):
 @login_required(login_url='../login/')
 # Param request - Request to the profile page
 # Returns profile page
-# This function will return the profile page if the user is logged in, this will grab the major, progress, and flightplan of 
-# the current user to give to the profile page to display and or update. The user can use this page to add preferences to schedule 
+# This function will return the profile page if the user is logged in, this will grab the major, progress, and flightplan of
+# the current user to give to the profile page to display and or update. The user can use this page to add preferences to schedule
 # generation or change their major, also displays a progress bar for the courses completion
 def profile(request):
 
-    current_user, major, progressTotal, flightplan, Schedule = ProgressBar(request)
+    current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
 
     # Action from Modals
     if request.method == "POST":
         CreditHours = request.POST.get('CreditHours')
-        DesiredHours = request.POST.getlist('DesiredHours')
+        DesiredHours = request.POST.get('DesiredHours')
         NewMajor = request.POST.get('NewMajor')
 
         # If the user doesn't want to change their major
         if NewMajor is None:
             # Update Params Modal
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule})
+            # StudentInfo.objects.filter(userid=current_user.id).update(desiredHours=DesiredHours, credithour=CreditHours)
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
         elif major.major == NewMajor:
             # User tried to update their major without changing their major, do nothing
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
         else:
             # Update Major
             NewFlightPlanJson = FlightPlan.objects.get(major=NewMajor)
@@ -105,13 +117,13 @@ def profile(request):
 
             currentUser, major, progressTotal, flightplan = ProgressBar(request)
 
-            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule})
+            return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
-    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule})
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
 # Param request - Request to the progress action
 # Returns user information related to the user which is the current user, major, progress total, and flightplan of that user
-# This function will return everything for the profile page to use, also used 
+# This function will return everything for the profile page to use, also used
 # for the progress bar to display how close the user is to completion
 def ProgressBar(request):
     current_user = request.user
@@ -134,13 +146,35 @@ def ProgressBar(request):
     EncodedSchedule = user_list[0].schedule
     DecodedSchedule = json.loads(EncodedSchedule)
 
-    return current_user, major, progressTotal, flightplan, DecodedSchedule
+    # Get Times/Dates
+    CourseName = ''
+    CourseDict = {}
+    TimeDict = {}
+
+    # Create a coursename, date, time dict from schedule
+    for key,value in DecodedSchedule.items():
+        Time = value['coursetime'].split(',')
+        TempDays = value['days'].split(',')
+
+        # Replace Th with H
+        for index in range(len(TempDays)):
+            TempDays[index].upper()
+            TempDays[index] = TempDays[index].replace("Th", "Z")
+            TempDays[index] = TempDays[index].replace("TH", "Z")
+
+        # Finish up dict
+        Days = TempDays
+        CourseName = value['subject'] + ' ' + value['coursecode']
+        TimeDict = dict(zip(Days, Time))
+        CourseDict[CourseName] = TimeDict
+
+    return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
 
 @login_required(login_url='../login/')
 # Param request - Request to the schedule page
 # Returns schedule page
 # This function will return the schedule page if the user is logged in. It will grab everything it needs for the user and attempt
-# to create a schedule for the next semester of classes for that user based on their progress so far. 
+# to create a schedule for the next semester of classes for that user based on their progress so far.
 def schedule(request):
     current_user = request.user
     #Get user info and preferences
