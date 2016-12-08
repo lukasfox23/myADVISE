@@ -335,7 +335,7 @@ def schedule(request):
     user_list.save()
     print classHours
     current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
-    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict, 'classHours':classHours})
 
 def convert_to_seconds(thisTime):
     afternoonFlag = False
