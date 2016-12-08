@@ -268,6 +268,6 @@ class ScheduleTests(TestCase):
     def test_schedule_meets_credithour_preference(self):
         self.client.login(username='blakrtest2', password='blakrtest2')
         response = self.client.get('/schedule/', follow=False)
-        requestedHours = response.context['hours']
+        requestedHours = response.context['classHours']
         student = StudentInfo.objects.get(pk = 53)
         self.assertTrue(requestedHours <= student.credithour+1)
