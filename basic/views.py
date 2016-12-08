@@ -237,22 +237,29 @@ def schedule(request):
 
     preferencesExhausted = False
 
+    # check if time preference exist
     if(desiredHours != "Don't Care"):
+        # check all classes
         while(preferencesExhausted == False):
             for courseSet in semesterCourses:
                 courseScheduled = False
                 finishedSet = False
                 while(courseScheduled == False and finishedSet == False):
                     for thisCourse in courseSet:
+                        # skip this course if it will violate hour preference
                         if(classHours + int(thisCourse.units) > preferredHours + 1):
                             #scheduleDone = True
                             courseScheduled = True
                             break
                         else:
+                            # copy time ranges rray
                             timeRangesT = copy.deepcopy(timeRanges)
+                            
+                            # get times for this course
                             timeString = thisCourse.coursetime.split(",")
                             meetPref = True
-                            print thisCourse.title
+                            
+                            # verify times meet preference
                             for time in timeString:
                                 splitTimes = time.split('-')
                                 if(desiredHours == 'After Noon'):
@@ -261,21 +268,25 @@ def schedule(request):
                                 elif(desiredHours == 'Before Noon'):
                                     if 'pm' in splitTimes[0]:
                                         meetPref = False
-
+                            
+                            # skip if preference not me
                             if(meetPref == False):
                                 break
 
+                            # verify no time conflict occurs
                             conflict=checkConflict(timeRangesT, thisCourse)
+                            
+                            # update schedule and time ranges array
                             if(conflict == False):
                                 timeRanges = timeRangesT
                                 schedule.append(thisCourse)
                                 classHours = classHours + int(thisCourse.units)
                                 courseScheduled = True
-                                print thisCourse.title
                                 break
                     finishedSet = True
             preferencesExhausted = True
 
+    # perform same process but dont worry about time preference
     while(scheduleDone == False):
         for courseSet in semesterCourses:
             courseScheduled = False
@@ -290,7 +301,11 @@ def schedule(request):
                         break
                     else:
                         timeRangesT = copy.deepcopy(timeRanges)
+                        
+                        # check for course conflict
                         conflict=checkConflict(timeRangesT, thisCourse)
+                        
+                        # update schedule and time range if no conflciy
                         if(conflict == False):
                             timeRanges = timeRangesT
                             schedule.append(thisCourse)
@@ -299,6 +314,7 @@ def schedule(request):
                             break
                     finishedSet = True
         scheduleDone = True
+    
     #schedule gened if available
     genedFound = False
 
@@ -306,9 +322,13 @@ def schedule(request):
     if('SEMINAR' not in schedule[0].title):
         if("CO-OP" in schedule[0].title):
             isCoop = True
+    # if gened available and this not co-op semeseter
+    # replace one course with gened
     if(genedList and isCoop is False):
         schedule.pop()
         courseList = Course.objects.filter(genedflag = True).exclude(coursetime = "")
+        
+        # find gened that meets requirement; similar to other scheduling
         while(genedFound == False):
             for gened in genedList:
                 if(genedFound == True):
@@ -327,6 +347,8 @@ def schedule(request):
                                 courseScheduled = True
                                 break
             genedFound = True
+    
+    # convert back to json
     finalSchedule = dict()
     for course in schedule:
         finalSchedule[course.courseid] = dict(subject=course.subject,coursecode=course.coursecode,title=course.title,days=course.days,coursetime=course.coursetime)
@@ -337,6 +359,10 @@ def schedule(request):
     current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
     return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
+###
+# convert a time to seconds
+# param thisTime: time in format: hh:mmpm/am
+# return time in seconds
 def convert_to_seconds(thisTime):
     afternoonFlag = False
     #adjust for pm if needed
@@ -359,7 +385,10 @@ def convert_to_seconds(thisTime):
     thisTime
     return thisTime
 
-
+###
+# convert a time range string to range in seconds
+# param time_str: range to convert, form HH:MMam/pm-HH:MMam/pn
+# return time range in seconds
 def time_range_to_seconds(time_str):
 	times = time_str.split('-')
 
@@ -368,17 +397,17 @@ def time_range_to_seconds(time_str):
 
 	return a1, a2
 
+### 
+# check if a range intersects
+# param a1: time 1 begin
+# param a2: time 1 end
+# param b1: time 2 begin
+# param b2: time 2 end
 def check_range_intersect(a1, a2, b1, b2):
 	if(a1 <= b2) and (a2 >= b1):
 	       return True;
 	return False;
 
-####
-# checks if course times overlap
-# param timeRanges: stores current time ranges for scheduled courses
-# param course: course to be added
-# returns b		return True;
-	return False;
 
 ####
 # checks if course times overlap
@@ -387,15 +416,23 @@ def check_range_intersect(a1, a2, b1, b2):
 # returns bool indicating conflict
 def checkConflict(timeRangesT, course):
     days = course.days
+    
+    # get list of days and times associated with them
     days = days.split(",")
     timeString = course.coursetime.split(",")
     conflict = False
+    
+    # iterate through days list
     for i in range(len(days)):
+        # determine which days offered
         daysOffered = []
+        
+        # thursday special case; mark it and remove if present
         if('Th' in days[i]):
             daysOffered.append(3)
             days[i] = days[i].replace("Th", "", 1)
 
+        # iterate through and mark days
         for day in days[i]:
             if day == 'M':
                 daysOffered.append(0)
@@ -406,19 +443,24 @@ def checkConflict(timeRangesT, course):
             elif day == 'F':
                 daysOffered.append(4)
 
+        # convert time for these days to range
         a1, a2 = time_range_to_seconds(timeString[i])
 
+        # verify no time conflicts on each day offered
         for day in daysOffered:
             for timeRange in timeRangesT[day]:
                 b1 = timeRange[0]
                 b2 = timeRange[1]
                 if(check_range_intersect(a1, a2, b1, b2) == True):
                     conflict = True
-
+        
+        # add this time to timeRange if no conflict
         if(conflict == False):
             timeRange = [a1, a2]
             for day in daysOffered:
                 timeRangesT[day].append(timeRange)
         else:
             break
+            
+    # return conflict status
     return conflict
