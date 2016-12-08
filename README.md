@@ -36,6 +36,15 @@ You can replace ``helloworld`` with your desired project name.
 
 See also, a [ready-made application](https://github.com/heroku/python-getting-started), ready to deploy.
 
+## How to run automated test_redirect_to_login_if_no_user_logged_in
+
+Run these commands from the app directory
+
+    $ ./manage.py collectstatic
+    $ python manage.py test"
+
+Results of tests should be displayed in the terminal
+
 ## Further Reading
 
 - [Gunicorn](https://warehouse.python.org/project/gunicorn/)
