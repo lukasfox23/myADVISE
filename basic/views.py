@@ -104,6 +104,10 @@ def profile(request):
         DesiredHours = request.POST.get('DesiredHours')
         NewMajor = request.POST.get('NewMajor')
 
+        if CreditHours == "No Preference":
+            CreditHours = major.credithour
+            print(CreditHours)
+
         # If the user doesn't want to change their major
         if NewMajor is None:
             # Update Params Modal
@@ -117,7 +121,7 @@ def profile(request):
             NewFlightPlanJson = FlightPlan.objects.get(major=NewMajor)
             StudentInfo.objects.filter(userid=current_user.id).update(progress=NewFlightPlanJson.content, major=NewMajor)
 
-            currentUser, major, progressTotal, flightplan = ProgressBar(request)
+            currentUser, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
 
             return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
@@ -145,32 +149,42 @@ def ProgressBar(request):
     progressTotal = round(progressTotal,2)
 
     # Grabbing the schedule
-    EncodedSchedule = user_list[0].schedule
-    DecodedSchedule = json.loads(EncodedSchedule)
-
     # Get Times/Dates
     CourseName = ''
     CourseDict = {}
     TimeDict = {}
+    ScheduleCheck = {}
+    ScheduleCheck = user_list[0].schedule
+    EncodedSchedule = {}
+    DecodedSchedule = {}
 
-    # Create a coursename, date, time dict from schedule
-    for key,value in DecodedSchedule.items():
-        Time = value['coursetime'].split(',')
-        TempDays = value['days'].split(',')
+    if ScheduleCheck == 'none':
+        return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
+
+    else:
+
+        EncodedSchedule = user_list[0].schedule
+        DecodedSchedule = json.loads(EncodedSchedule)
+
+
+        # Create a coursename, date, time dict from schedule
+        for key,value in DecodedSchedule.items():
+            Time = value['coursetime'].split(',')
+            TempDays = value['days'].split(',')
 
         # Replace Th with H
-        for index in range(len(TempDays)):
-            TempDays[index].upper()
-            TempDays[index] = TempDays[index].replace("Th", "Z")
-            TempDays[index] = TempDays[index].replace("TH", "Z")
+            for index in range(len(TempDays)):
+                TempDays[index].upper()
+                TempDays[index] = TempDays[index].replace("Th", "Z")
+                TempDays[index] = TempDays[index].replace("TH", "Z")
 
-        # Finish up dict
-        Days = TempDays
-        CourseName = value['subject'] + ' ' + value['coursecode']
-        TimeDict = dict(zip(Days, Time))
-        CourseDict[CourseName] = TimeDict
+            # Finish up dict
+            Days = TempDays
+            CourseName = value['subject'] + ' ' + value['coursecode']
+            TimeDict = dict(zip(Days, Time))
+            CourseDict[CourseName] = TimeDict
 
-    return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
+        return current_user, major, progressTotal, flightplan, DecodedSchedule, CourseDict
 
 @login_required(login_url='../login/')
 # Param request - Request to the schedule page
@@ -231,13 +245,14 @@ def schedule(request):
                 while(courseScheduled == False and finishedSet == False):
                     for thisCourse in courseSet:
                         if(classHours + int(thisCourse.units) > preferredHours + 1):
-                            scheduleDone = True
+                            #scheduleDone = True
                             courseScheduled = True
                             break
                         else:
                             timeRangesT = copy.deepcopy(timeRanges)
                             timeString = thisCourse.coursetime.split(",")
                             meetPref = True
+                            print thisCourse.title
                             for time in timeString:
                                 splitTimes = time.split('-')
                                 if(desiredHours == 'After Noon'):
@@ -256,6 +271,7 @@ def schedule(request):
                                 schedule.append(thisCourse)
                                 classHours = classHours + int(thisCourse.units)
                                 courseScheduled = True
+                                print thisCourse.title
                                 break
                     finishedSet = True
             preferencesExhausted = True
@@ -269,7 +285,7 @@ def schedule(request):
                 for thisCourse in courseSet:
                     #Check if the preffered hours are greatly exceeded
                     if((classHours + int(thisCourse.units))> (preferredHours + 1)):
-                        scheduleDone = True
+                        #scheduleDone = True
                         courseScheduled = True
                         break
                     else:
@@ -291,6 +307,7 @@ def schedule(request):
         if("CO-OP" in schedule[0].title):
             isCoop = True
     if(genedList and isCoop is False):
+        schedule.pop()
         courseList = Course.objects.filter(genedflag = True).exclude(coursetime = "")
         while(genedFound == False):
             for gened in genedList:
@@ -316,7 +333,9 @@ def schedule(request):
     finalSchedule = json.dumps(finalSchedule)
     user_list.schedule = finalSchedule
     user_list.save()
-    return render(request, "basic/basic.html", {'coursesToSchedule': semesterCourses, 'hours' : classHours, 'neededCourses':classList, 'flightplan':flightplan, 'schedule':finalSchedule})
+    print classHours
+    current_user, major, progressTotal, flightplan, Schedule, CourseDict = ProgressBar(request)
+    return render(request, "basic/profile.html", {'currentUser':current_user, 'major':major, 'progressTotal':progressTotal, 'FlightPlan':flightplan, 'Schedule':Schedule, 'CourseDict':CourseDict})
 
 def convert_to_seconds(thisTime):
     afternoonFlag = False
@@ -351,7 +370,14 @@ def time_range_to_seconds(time_str):
 
 def check_range_intersect(a1, a2, b1, b2):
 	if(a1 <= b2) and (a2 >= b1):
-		return True;
+	       return True;
+	return False;
+
+####
+# checks if course times overlap
+# param timeRanges: stores current time ranges for scheduled courses
+# param course: course to be added
+# returns b		return True;
 	return False;
 
 ####
@@ -383,7 +409,6 @@ def checkConflict(timeRangesT, course):
         a1, a2 = time_range_to_seconds(timeString[i])
 
         for day in daysOffered:
-            print day
             for timeRange in timeRangesT[day]:
                 b1 = timeRange[0]
                 b2 = timeRange[1]
@@ -396,5 +421,4 @@ def checkConflict(timeRangesT, course):
                 timeRangesT[day].append(timeRange)
         else:
             break
-
     return conflict
