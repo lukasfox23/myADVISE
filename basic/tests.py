@@ -20,7 +20,7 @@ class HomePageTests(TestCase):
         found = resolve('/')
         self.assertEqual(found.func, index)
 
-    def test_redirect_to_login(self):
+    def test_redirect_to_login_if_no_user_logged_in(self):
         response = self.client.get('/', follow=False)
         self.assertEquals(302, response.status_code)
         response = self.client.get('/', follow=True)
@@ -86,9 +86,6 @@ class LoginTests(TestCase):
         form_data = {'username': ' temporary ', 'password': ' temporary '}
         form = LoginForm(data=form_data)
         self.assertTrue(form.is_valid())
-
-    def test_login_authenticate(self):
-        user = authenticate(username='temporary', password='temporary')
 
 class CreateTests(TestCase):
     fixtures = ['myADVISE.json']
@@ -203,7 +200,7 @@ class ProfileTests(TestCase):
         currentUserInfo = StudentInfo.objects.get(userid = request.user)
         response = profile(request)
         self.assertIn('<table class="table table-bordered table-hover">', response.content)
-#'\"6531\": {\"days\": \"M, W\", \"coursecode\": \"423\", \"title\": \"BIOENGR MEASUREMENTS LAB\", \"coursetime\": \"02:00pm-02:50pm, 02:00pm-03:40pm\", \"subject\": \"BE\"},'
+
 class ScheduleTests(TestCase):
     fixtures = ['myADVISE.json']
     def setUp(self):
@@ -237,7 +234,6 @@ class ScheduleTests(TestCase):
 
     def test_checkConflict_no_conflict(self):
         courseToAdd = Course.objects.get(pk=8)
-        print courseToAdd.days
         time = '01:00pm-01:45pm'
         time2 = '01:00pm-02:30pm'
         a1, a2 = time_range_to_seconds(time)
@@ -269,10 +265,9 @@ class ScheduleTests(TestCase):
         intersect = check_range_intersect(a1, a2, b1, b2)
         self.assertFalse(intersect)
 
-    def test_schedule(self):
-        request = self.factory.get('/')
-        request.user = authenticate(username='blakrtest2', password='blakrtest2')
-        correctSchedule = "{\"6531\": {\"days\": \"M, W\", \"coursecode\": \"423\", \"title\": \"BIOENGR MEASUREMENTS LAB\", \"coursetime\": \"02:00pm-02:50pm, 02:00pm-03:40pm\", \"subject\": \"BE\"}, \"6404\": {\"days\": \"T\", \"coursecode\": \"295\", \"title\": \"INTRO LABORATORY I - SL\", \"coursetime\": \"10:00am-11:50am\", \"subject\": \"PHYS\"}, \"6518\": {\"days\": \"TTh\", \"coursecode\": \"101\", \"title\": \"INTR BIOENGINEERING\", \"coursetime\": \"04:00pm-04:50pm\", \"subject\": \"BE\"}, \"6573\": {\"days\": \"MWF\", \"coursecode\": \"205\", \"title\": \"MECHANICS I:STATICS\", \"coursetime\": \"11:00am-11:50am\", \"subject\": \"CEE\"}, \"5843\": {\"days\": \"MWF, TTh\", \"coursecode\": \"201\", \"title\": \"ENGINEERING ANALYSIS III\", \"coursetime\": \"09:00am-09:50am, 09:30am-10:45am\", \"subject\": \"ENGR\"}, \"5846\": {\"days\": \"TTh\", \"coursecode\": \"205\", \"title\": \"DIFF EQNS FOR ENGRG\", \"coursetime\": \"09:30am-10:45am\", \"subject\": \"ENGR\"}, \"6428\": {\"days\": \"TTh\", \"coursecode\": \"240\", \"title\": \"UNITY OF LIFE - S\", \"coursetime\": \"09:30am-10:45am\", \"subject\": \"BIOL\"}}"
-        response = schedule(request)
+    def test_schedule_meets_credithour_preference(self):
+        self.client.login(username='blakrtest2', password='blakrtest2')
+        response = self.client.get('/schedule/', follow=False)
+        requestedHours = response.context['hours']
         student = StudentInfo.objects.get(pk = 53)
-        self.assertEqual(student.schedule, correctSchedule)
+        self.assertTrue(requestedHours <= student.credithour+1)
